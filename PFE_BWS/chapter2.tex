@@ -1,0 +1,616 @@
+\chapter{GENERAL CONCEPT AND SYSTEM COMPONENTS}
+
+\section{Introduction}
+
+Building on the general framework and objectives outlined in the previous chapter,
+this chapter focuses on the technical environment that supports the development of the
+IO‑Box project. It presents the hardware and software components employed, the
+development tools and programming environment, as well as the communication
+protocols that enable interaction with sensors, actuators, and external systems. The
+chapter also introduces the hardware architecture, detailing how the different elements
+are organized and integrated to form a coherent and functional platform.
+
+By examining these aspects, we establish the practical foundation necessary for the
+design and implementation of the IO‑Box. This technical overview highlights the
+resources and methodologies that will be used throughout the project, ensuring that the
+system is both reliable and adaptable to industrial requirements.
+
+\section{Synoptic Diagram of the Proposed Solution}
+
+The proposed solution can be represented by a synoptic diagram that highlights the
+main functional phases of the system. The process begins with the acquisition of data
+from the integrated sensors. These raw signals are then subjected to filtering and
+calibration in order to remove noise and ensure measurement accuracy. The processed
+data is passed to the regulation stage, where decision‑making and control logic are
+applied. Finally, the regulated information leads to two possible actions: either the
+transmission of data to external systems (IoT/cloud or monitoring dashboard), or the
+activation of actuators to directly influence the physical environment.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{C:/Users/selim/Downloads/imagesreport/synoptique.png}
+    \caption{Synoptic diagram of the proposed solution showing acquisition, filtering, regulation, and transmission/actuation}
+    \label{fig:synoptic}
+\end{figure}
+
+
+\section{General Idea Presentation and Used Tools Utility}
+
+As introduced in the previous chapter, the IO‑Box project is conceived as a modular
+platform designed to simplify sensor integration and signal management in industrial
+contexts. The general idea is to build a system that acquires inputs, processes them
+locally, and communicates results to external supervisory platforms. To achieve this, the
+IO‑Box relies on both a layered software architecture and a robust hardware foundation.
+
+\subsubsection*{Software Layers}
+The software architecture is organized into four distinct layers:
+\begin{itemize}
+    \item \textbf{Hardware Abstraction Layer (HAL)}: Provides standardized access to
+    peripherals and hardware resources, ensuring portability and independence from
+    the underlying board.
+    \item \textbf{Board Support Package (BSP)}: Contains drivers and low‑level routines
+    specific to the STM32 microcontroller and associated components.
+    \item \textbf{Manager Layer}: Supervises system functions, including protocol
+    management, error handling, and data integrity.
+    \item \textbf{Application Layer}: Implements the functional logic of the IO‑Box,
+    such as signal processing, actuator control, and communication with external
+    supervisory systems.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{C:/Users/selim/Downloads/imagesreport/software_layers.png}
+    \caption{Software architecture organized into four distinct layers}
+    \label{fig:software_layers}
+\end{figure}
+
+\subsubsection*{Hardware Components}
+Complementing the software layers, the hardware architecture provides the physical
+interface with the industrial environment. As shown in the block diagrams provided by
+the hardware team, the system integrates:
+\begin{itemize}
+    \item \textbf{Power Supply Architecture}: A multi‑stage conversion system that
+    regulates input voltages (12–72V) down to stable levels (48V, 24V, 12V, 5V, and
+    3.3V) using buck converters and LDO regulators, ensuring reliable energy
+    distribution.
+    \item \textbf{Microcontroller Unit (STM32G474)}: Serves as the core processing
+    element, coordinating peripherals and executing firmware.
+    \item \textbf{Communication Interfaces}: Support for UART, SPI, I\textsuperscript{2}C,
+    CAN FD, LIN, and RS485, enabling interoperability with diverse sensors and
+    industrial devices.
+    \item \textbf{Peripheral Modules}: ADCs, DACs, PWM outputs, multiplexers, and
+    transceivers that extend the IO‑Box’s connectivity and control capabilities.
+\end{itemize}
+
+Together, these software layers and hardware components form a coherent system that
+translates the project’s objectives into a practical and scalable solution. This general
+concept provides the foundation for the detailed technical environment and architecture
+that will be analyzed in the following sections.
+
+\section{Hardware Tools}
+\subsection{STM32G474}
+
+At the heart of the IO‑Box hardware architecture lies the STM32G474 microcontroller,
+a high‑performance device from STMicroelectronics. It is based on the ARM Cortex‑M4
+core with floating‑point unit (FPU), making it particularly well‑suited for real‑time signal
+processing and control applications.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{C:/Users/selim/Downloads/imagesreport/stm32g474_chip.jpg}
+    \caption{STM32G474 Microcontroller (physical package)}
+    \label{fig:stm32_chip}
+\end{figure}
+
+The STM32G474 was selected for several reasons:
+\begin{itemize}
+    \item \textbf{Processing Capabilities}: Equipped with a 170 MHz CPU and DSP
+    instructions, it enables efficient execution of filtering, regulation, and control
+    algorithms.
+    \item \textbf{Rich Peripheral Set}: Provides multiple ADC channels, DAC outputs,
+    PWM timers, and communication interfaces (UART, SPI, I\textsuperscript{2}C, CAN FD,
+    LIN, USB), ensuring compatibility with diverse sensors and actuators.
+    \item \textbf{Memory Resources}: Integrates up to 128 KB SRAM and 512 KB Flash,
+    allowing the implementation of complex firmware while maintaining flexibility.
+    \item \textbf{Analog Performance}: Features high‑resolution ADCs and DACs,
+    supporting precise acquisition and generation of industrial signals.
+    \item \textbf{Scalability and Ecosystem}: Benefits from the STM32Cube ecosystem,
+    including HAL libraries, BSP drivers, and development tools that simplify firmware
+    design and portability.
+\end{itemize}
+
+\begin{table}[H]
+    \centering
+    \caption{Product Attributes — STM32G474 Microcontroller}
+    \label{tab:stm32g474_attributes}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Category} & Integrated Circuits, Embedded Systems, Microcontrollers \\
+        \hline
+        \textbf{Manufacturer} & STMicroelectronics \\
+        \hline
+        \textbf{Series} & STM32G4 \\
+        \hline
+        \textbf{Packaging} & Tray \\
+        \hline
+        \textbf{Component Status} & Active \\
+        \hline
+        \textbf{Processor Core} & ARM Cortex‑M4F \\
+        \hline
+        \textbf{Core Size} & 32‑Bit \\
+        \hline
+        \textbf{Speed} & 170 MHz \\
+        \hline
+        \textbf{Connectivity} & CANbus, I\textsuperscript{2}C, IrDA, LINbus, QSPI, SPI, UART/USART \\
+        \hline
+        \textbf{Peripherals} & DMA, I2S, POR, PWM, WDT, Brown‑out detection/reset \\
+        \hline
+        \textbf{Number of I/O} & 52 \\
+        \hline
+        \textbf{Program Memory Size} & 512 KB Flash \\
+        \hline
+        \textbf{RAM Size} & 128 KB \\
+        \hline
+        \textbf{Data Converters} & ADC: 26 × 12‑bit; DAC: 7 × 12‑bit \\
+        \hline
+        \textbf{Supply Voltage} & 1.71 V – 3.6 V \\
+        \hline
+        \textbf{Oscillator Type} & Internal \\
+        \hline
+        \textbf{Operating Temperature} & –40 °C to +125 °C \\
+        \hline
+        \textbf{Mounting Type} & Surface Mount \\
+        \hline
+        \textbf{Package} & 64‑LQFP (10 × 10 mm) \\
+        \hline
+        \textbf{Base Product Number} & STM32G474 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+
+
+Within the IO‑Box, the STM32G474 acts as the central processing unit, coordinating
+signal acquisition, local data processing, and actuator control. It also supervises
+communication with external systems through multiple industrial protocols, making it a
+key enabler of the project’s objectives.
+
+\section{Software Tools}
+
+\subsection{Visual Studio Code (VS Code)}
+
+Visual Studio Code is employed as a lightweight and versatile integrated development
+environment (IDE). It provides syntax highlighting, debugging extensions, and Git
+integration, making it suitable for rapid code editing and version control. Its modularity
+allows developers to adapt the environment to specific project needs.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{C:/Users/selim/Downloads/imagesreport/vs_code.jpeg}
+    \caption{Visual Studio Code interface}
+    \label{fig:vscode}
+\end{figure}
+
+\subsection{IAR Embedded Workbench}
+
+IAR Embedded Workbench is used for compiling and debugging embedded C code on
+the STM32 platform. It offers advanced optimization features, precise debugging
+capabilities, and support for hardware breakpoints, which are essential for real‑time
+embedded applications. This tool ensures reliable firmware execution on the target
+microcontroller.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{C:/Users/selim/Downloads/imagesreport/iar_workbench.png}
+    \caption{IAR Embedded Workbench IDE}
+    \label{fig:iar}
+\end{figure}
+
+\subsection{STM32CubeMX}
+
+STM32CubeMX is a configuration tool provided by STMicroelectronics. It simplifies the
+initialization of peripherals, clock trees, and middleware by generating initialization code
+automatically. This reduces development time and ensures consistency in hardware
+resource management. It also integrates seamlessly with HAL and BSP layers, aligning
+with the modular architecture of the IO‑Box.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{C:/Users/selim/Downloads/imagesreport/stm32cubemx.png}
+    \caption{STM32CubeMX configuration interface}
+    \label{fig:cubemx}
+\end{figure}
+
+\subsection{GitLab}
+
+GitLab is employed as a collaborative platform for version control and project
+management. It enables developers to share code, track changes, and maintain
+repositories securely. Through GitLab, the team ensures transparency, reproducibility,
+and efficient collaboration, which are critical for academic and industrial projects alike.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\textwidth]{C:/Users/selim/Downloads/imagesreport/gitlab_logo.png}
+    \caption{GitLab logo}
+    \label{fig:gitlab}
+\end{figure}
+
+\section{Communication Protocols}
+
+\subsection{Serial Peripheral Interface (SPI)}
+
+The Serial Peripheral Interface (SPI) is a synchronous serial communication protocol
+widely used in embedded systems. It enables high‑speed data exchange between a
+microcontroller and peripheral devices such as sensors, memory modules, or
+communication transceivers. SPI operates in a master–slave configuration, where the
+microcontroller typically acts as the master, controlling the clock and data flow.
+
+In the IO‑Box project, SPI is employed to ensure reliable and efficient communication
+with external modules that require fast data transfer. Its simplicity and speed make it
+suitable for real‑time applications, particularly when multiple peripherals must be
+interfaced with the STM32 microcontroller.
+
+SPI communication is based on a clock signal generated by the master device. Each bit
+of data is shifted out on the MOSI line while simultaneously another bit is shifted in on
+the MISO line. This process is synchronized by the clock (SCLK), ensuring deterministic
+timing. The communication sequence typically follows these steps: the master activates
+the Chip Select (CS) line of the desired slave, provides the clock signal, transmits data
+bit‑by‑bit on MOSI while receiving data on MISO, samples the data according to the
+configured mode, and finally deactivates the CS line to end the session. This mechanism
+allows full‑duplex communication, meaning data can be transmitted and received
+simultaneously.
+
+SPI supports four modes of operation (Mode 0 to Mode 3), determined by the
+configuration of clock polarity (CPOL) and clock phase (CPHA). This flexibility ensures
+compatibility with a wide range of peripheral devices. Key characteristics of SPI include
+its high speed (operating at several MHz), simple wiring with four main signals (MOSI,
+MISO, SCLK, CS), and scalability through multiple slave connections.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{C:/Users/selim/Downloads/imagesreport/spi_diagram.png}
+    \caption{Basic SPI communication between master and slave devices}
+    \label{fig:spi}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{C:/Users/selim/Downloads/imagesreport/endianness_diagram.png}
+    \caption{Comparison of Big‑endian and Little‑endian byte ordering in memory}
+    \label{fig:endianness}
+\end{figure}
+
+\subsection{Controller Area Network (CAN)}
+
+The Controller Area Network (CAN) is a robust serial communication protocol originally
+developed for automotive applications, but now widely used in industrial and embedded
+systems. It enables reliable data exchange between multiple devices without requiring a
+central host, making it ideal for distributed control systems.
+
+In the IO‑Box project, CAN is employed to ensure communication with industrial
+equipment and sensors that demand high reliability and fault tolerance. Its ability to
+handle multiple nodes on a single bus makes it particularly suitable for environments
+where numerous devices must share information in real time.
+
+CAN communication is based on a message‑oriented protocol. Instead of addressing
+specific devices directly, each message carries an identifier that defines its priority and
+content. This allows multiple nodes to listen simultaneously and decide whether to act
+on the received data. The arbitration mechanism ensures that when two nodes attempt
+to transmit at the same time, the message with the highest priority (lowest identifier
+value) wins, while the other node waits until the bus is free. This guarantees
+deterministic communication without collisions.
+
+Key characteristics of CAN include:
+\begin{itemize}
+    \item \textbf{Multi‑master capability}: Any node can initiate communication when the
+    bus is idle.
+    \item \textbf{Error detection and handling}: Built‑in mechanisms such as CRC checks,
+    acknowledgment bits, and error frames ensure data integrity.
+    \item \textbf{Priority‑based arbitration}: Messages are prioritized by identifiers,
+    ensuring that critical data is transmitted first.
+    \item \textbf{Scalability}: Supports up to 112 nodes on a single bus, making it suitable
+    for complex systems.
+    \item \textbf{Speed}: Operates up to 1 Mbps in classical CAN, and higher in CAN FD
+    (Flexible Data‑Rate), which extends payload size and transmission speed.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\textwidth]{C:/Users/selim/Downloads/imagesreport/trame_can.jpg}
+    \caption{Basic CAN frame}
+    \label{fig:can}
+\end{figure}
+
+
+In practice, CAN uses two differential lines, CAN\_H and CAN\_L, to transmit data. This
+differential signaling improves noise immunity and allows reliable communication even
+in electrically harsh environments. Each frame consists of fields such as the start of
+frame, identifier, control bits, data payload, CRC, and end of frame, ensuring structured
+and error‑resistant communication.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\textwidth]{C:/Users/selim/Downloads/imagesreport/can_diagram.png}
+    \caption{Basic CAN bus communication with multiple nodes}
+    \label{fig:can}
+\end{figure}
+
+\section{Peripherals} 
+
+\subsection{Analog to Digital Converter (ADC)}
+
+The Analog‑to‑Digital Converter (ADC) is a fundamental peripheral in embedded
+systems, responsible for transforming continuous analog signals into discrete digital
+values that can be processed by the microcontroller. This conversion is essential for
+applications where physical phenomena such as temperature, pressure, or current must
+be measured and interpreted by digital logic.
+
+In the IO‑Box project, ADCs are employed to acquire signals from sensors and external
+modules, enabling precise monitoring and control. The STM32G474 microcontroller
+integrates multiple high‑resolution ADC channels, allowing simultaneous sampling of
+different inputs. This capability is particularly important in industrial contexts where
+multiple signals must be captured in real time.
+
+The operation of an ADC follows a well‑defined process. The analog input is sampled at
+regular intervals determined by the sampling frequency. Each sample is then quantized
+into a digital value according to the converter’s resolution (e.g., 12‑bit or 16‑bit). The
+resulting digital word represents the amplitude of the analog signal at that instant. The
+accuracy of this conversion depends on factors such as resolution, sampling rate, and
+reference voltage stability.
+
+Key characteristics of ADCs include:
+\begin{itemize}
+    \item \textbf{Resolution}: Defines the number of discrete levels available.
+    \item \textbf{Sampling Rate}: Determines how frequently the analog signal is measured,
+    affecting the fidelity of dynamic signals.
+    \item \textbf{Reference Voltage}: Sets the maximum measurable input range, ensuring
+    proper scaling of the digital output.
+    \item \textbf{Input Channels}: Multiple channels allow acquisition from several sensors
+    simultaneously.
+    \item \textbf{Conversion Modes}: Support for single, continuous, and DMA‑driven
+    conversions, enabling flexible integration into firmware.
+\end{itemize}
+
+Within the IO‑Box, ADCs are used to capture sensor data such as voltage levels, current
+measurements, or other analog signals. These values are then processed by the
+firmware to generate meaningful information, trigger control actions, or communicate
+results to external supervisory systems.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\textwidth]{C:/Users/selim/Downloads/imagesreport/ADC.png}
+    \caption{Basic ADC conversion from analog input to digital output}
+    \label{fig:adc}
+\end{figure}
+
+\subsection{Timers}
+
+Timers are fundamental peripherals in the STM32G474 microcontroller, designed to
+provide accurate time base generation, event counting, and signal measurement. They
+operate by incrementing or decrementing a counter register according to a clock source,
+and can trigger actions when predefined values are reached.
+
+Key functionalities of timers include:
+\begin{itemize}
+    \item \textbf{Time Base Generation}: Creating precise delays or periodic events.
+    \item \textbf{Input Capture}: Measuring external signal characteristics such as
+    frequency or pulse width.
+    \item \textbf{Output Compare}: Generating events when the counter matches a
+    reference value.
+    \item \textbf{Synchronization}: Coordinating multiple timers for complex control
+    tasks.
+    \item \textbf{Advanced Features}: Dead‑time insertion, break inputs, and
+    complementary outputs for safe power electronics control.
+\end{itemize}
+
+Timers are essential for scheduling tasks, measuring sensor signals, and driving
+peripherals that require precise timing.
+
+
+\subsection{Pulse Width Modulation (PWM)}
+
+Pulse Width Modulation (PWM) is a technique used to encode analog information into a
+digital waveform by varying the duty cycle of a periodic signal. In embedded systems,
+PWM is widely used for motor control, LED dimming, and power regulation.
+
+PWM signals in the STM32G474 are generated using timers. The timer counts up to a
+predefined value stored in the auto‑reload register (ARR), while the compare register
+(CCR) defines the switching point of the output. The ratio between the high time and the
+total period represents the duty cycle. By adjusting ARR and CCR, both frequency and
+duty cycle can be controlled with high precision.
+
+Key characteristics of PWM include:
+\begin{itemize}
+    \item \textbf{Frequency}: Determined by prescaler and ARR configuration.
+    \item \textbf{Duty Cycle}: Defined by CCR relative to ARR.
+    \item \textbf{Resolution}: Limited by timer bit width (typically 16‑bit).
+    \item \textbf{Complementary Outputs}: Enable safe control of MOSFET drivers in
+    half‑bridge or full‑bridge circuits.
+    \item \textbf{Applications}: Motor drivers, LED dimming, switching converters,
+    and DAC emulation.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\textwidth]{C:/Users/selim/Downloads/imagesreport/Duty_Cycle_Examples.png}
+    \caption{Illustration of PWM signals with different duty cycles (25\%, 50\%, and 75\%)}
+    \label{fig:pwm}
+\end{figure}
+
+\subsection{EEPROM Memory: M95M01-RDW6TP}
+
+To complement the STM32 microcontroller and ensure reliable data storage, the IO‑Box
+integrates an external EEPROM memory, specifically the M95M01‑RMN6TP from STMicroelectronics.
+This device provides non‑volatile storage for configuration parameters, calibration data,
+and system logs, allowing the platform to retain critical information even after power
+cycles.
+
+The M95M01‑RMN6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. It
+features a fast access time of 25 ns and communicates via the SPI bus, ensuring efficient
+integration with the STM32G474. Packaged in an 8‑pin SOIC format, it offers a compact
+solution suitable for embedded applications. Its endurance of up to one million write
+cycles and data retention of 40 years make it a robust choice for industrial environments
+where reliability is essential.
+
+\begin{table}[H]
+    \centering
+    \caption{Key Characteristics of M95M01‑RDW6TP EEPROM}
+    \label{tab:eeprom}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{Specification} \\
+        \hline
+        Manufacturer & STMicroelectronics \\
+        \hline
+        Type & Serial EEPROM \\
+        \hline
+        Capacity & 1 Mbit (131,072 × 8 bits) \\
+        \hline
+        Interface & SPI \\
+        \hline
+        Access Time & 25 ns \\
+        \hline
+        Package & SOIC‑8 \\
+        \hline
+        Endurance & 1,000,000 write cycles \\
+        \hline
+        Data Retention & 40 years \\
+        \hline
+        Operating Voltage & 1.8 V – 5.5 V \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{C:/Users/selim/Downloads/imagesreport/eeprom.png}
+    \caption{M95M01‑RDW6TP EEPROM memory chip}
+    \label{fig:eeprom}
+\end{figure}
+
+
+\section{Sensors}
+
+In the IO‑Box project, several sensors were integrated to enable environmental and
+physical measurements. Our work focused not only on interfacing these sensors with
+the STM32G474 microcontroller, but also on configuring their registers, managing
+communication protocols, and performing calibration to ensure accurate data
+acquisition. Each sensor was studied in detail, and its characteristics were documented
+to highlight its role within the system.
+
+\subsection{ENS210 Sensor}
+
+The ENS210 is a digital sensor from ScioSense that integrates both temperature and
+humidity measurement in a compact package. It communicates via an I\textsuperscript{2}C
+interface, making it easy to integrate with microcontrollers such as the STM32G474.
+Its high accuracy and low power consumption make it suitable for environmental
+monitoring in embedded systems.
+
+\begin{table}[H]
+    \centering
+    \caption{Key Characteristics of ENS210 Sensor}
+    \label{tab:ens210}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{Specification} \\
+        \hline
+        Manufacturer & ScioSense \\
+        \hline
+        Type & Temperature + Humidity Sensor \\
+        \hline
+        Interface & I\textsuperscript{2}C (16‑bit output registers) \\
+        \hline
+        Supply Voltage & 1.71 V – 3.6 V \\
+        \hline
+        Temperature Range & –40 °C to +100 °C \\
+        \hline
+        Temperature Accuracy & ±0.15 °C \\
+        \hline
+        Humidity Range & 0 – 100 \% RH \\
+        \hline
+       Humidity Accuracy & $\pm$2 \% RH \\
+        \hline
+        Package & 4‑QFN (2 × 2 mm) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{C:/Users/selim/Downloads/imagesreport/ES-12233_001__04637.jpg}
+    \caption{ENS210 digital temperature and humidity sensor}
+    \label{fig:ens210}
+\end{figure}
+
+\subsection{OPT3001DNPR Sensor}
+
+The OPT3001DNPR is a digital ambient light sensor from Texas Instruments. It is
+designed to measure the intensity of visible light and provide results in lux units,
+making it ideal for applications such as automatic brightness control, display backlight
+adjustment, and environmental monitoring. The sensor communicates via the
+I\textsuperscript{2}C protocol and features built‑in calibration and linear response across
+a wide dynamic range.
+
+In the IO‑Box project, the OPT3001DNPR was integrated to provide accurate light
+measurements. Work was carried out on its internal registers to configure measurement
+modes, thresholds, and calibration routines, ensuring reliable data acquisition for
+real‑time applications.
+
+\begin{table}[H]
+    \centering
+    \caption{Key Characteristics of OPT3001DNPR Sensor}
+    \label{tab:opt3001}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{Specification} \\
+        \hline
+        Manufacturer & Texas Instruments \\
+        \hline
+        Type & Ambient Light Sensor \\
+        \hline
+        Interface & I\textsuperscript{2}C \\
+        \hline
+        Supply Voltage & 1.6 V – 3.6 V \\
+        \hline
+        Measurement Range & 0.01 lux – 83,000 lux \\
+        \hline
+        Output Format & 16‑bit digital result in lux \\
+        \hline
+        Accuracy & ±10\% typical \\
+        \hline
+        Operating Temperature & –40 °C to +85 °C \\
+        \hline
+        Package & 6‑Pin WSON (2 × 2 mm) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{C:/Users/selim/Downloads/imagesreport/opt3001.jpg}
+    \caption{OPT3001DNPR ambient light sensor}
+    \label{fig:opt3001}
+\end{figure}
+
+
+
+
+
+
+\subsection{Conclusion}
+
+In this chapter, we presented the general concept and system components of the IO‑Box
+project. We began with the synoptic diagram, which outlined the main functional phases
+of acquisition, filtering, regulation, and transmission/actuation. We then introduced the
+software architecture, organized into four distinct layers (HAL, BSP, Manager, and
+Application), and complemented this with the hardware architecture, highlighting the
+STM32G474 microcontroller, power supply design, communication interfaces, and
+peripheral modules. Finally, we described the development tools and protocols that
+support the implementation of the system.
+
+By establishing this technical foundation, Chapter 3 has clarified the resources and
+methodologies that will be employed in the realization phase. The next chapter will be
+dedicated to the practical implementation of the IO‑Box, detailing the firmware design,
+register configuration, BSP development, and integration of sensors and actuators into
+a coherent and functional platform.
+
