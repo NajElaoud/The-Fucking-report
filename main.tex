@@ -13,6 +13,8 @@
 \DeclareOldFontCommand{\sc}{\normalfont\scshape}{\@nomath\sc}
 \makeatother
 
+\usepackage{indentfirst}
+
 
 %\usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
@@ -79,9 +81,9 @@
 \renewcommand{\thepage}{\arabic{page}}
 \setcounter{page}{1}
 
-\include{Chapter1}
-\include{Chapter2}
-\include{Chapter3}
+\include{Chapters/Chapter1}
+\include{Chapters/Chapter2}
+\include{Chapters/Chapter3}
 
 \bibliographystyle{plain}
 \bibliography{References}
