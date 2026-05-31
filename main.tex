@@ -49,15 +49,15 @@
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}}
 
-\setcounter{secnumdepth}{5} % seting level of numbering (default for "report" is % %3). With ''-1'' you have non number also for chapters
-\setcounter{tocdepth}{3} % if you want all the levels in your table of contents
+%\setcounter{secnumdepth}{5} % seting level of numbering (default for "report" is % %3). With ''-1'' you have non number also for chapters
+%\setcounter{tocdepth}{3} % if you want all the levels in your table of contents
 
 %\setlength{\parindent}{1cm}
 
-\tolerance=1 
-\emergencystretch=\maxdimen 
-\hyphenpenalty=10000 
-\hbadness=10000
+%\tolerance=1 
+%\emergencystretch=\maxdimen 
+%\hyphenpenalty=10000 
+%\hbadness=10000
 \begin{document}
 %\sloppy
 
@@ -67,6 +67,7 @@
 \pagenumbering{roman}
 
 \include{Acknowledgements}
+\include{Homage}
 \include{Dedication}
 \include{Abstract}
 
@@ -81,9 +82,11 @@
 \renewcommand{\thepage}{\arabic{page}}
 \setcounter{page}{1}
 
+\include{Introduction}
 \include{Chapters/Chapter1}
 \include{Chapters/Chapter2}
 \include{Chapters/Chapter3}
+\include{Conclusion}
 
 \bibliographystyle{plain}
 \bibliography{References}
