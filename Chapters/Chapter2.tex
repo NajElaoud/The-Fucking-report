@@ -38,22 +38,7 @@ processing and control applications.
     \label{fig:stm32_chip}
 \end{figure}
 
-The STM32G474 was selected for several reasons:
-\begin{itemize}
-    \item \textbf{Processing Capabilities}: Equipped with a 170 MHz CPU and DSP
-    instructions, it enables efficient execution of filtering, regulation, and control
-    algorithms.
-    \item \textbf{Rich Peripheral Set}: Provides multiple ADC channels, DAC outputs,
-    PWM timers, and communication interfaces (UART, SPI, I\textsuperscript{2}C, CAN FD,
-    LIN, USB), ensuring compatibility with diverse sensors and actuators.
-    \item \textbf{Memory Resources}: Integrates up to 128 KB SRAM and 512 KB Flash,
-    allowing the implementation of complex firmware while maintaining flexibility.
-    \item \textbf{Analog Performance}: Features high‑resolution ADCs and DACs,
-    supporting precise acquisition and generation of industrial signals.
-    \item \textbf{Scalability and Ecosystem}: Benefits from the STM32Cube ecosystem,
-    including HAL libraries, BSP drivers, and development tools that simplify firmware
-    design and portability.
-\end{itemize}
+The STM32G474 was preferred over the STM32F4 series due to its higher ADC count (five independent ADC units versus two on the F4), its native FDCAN peripheral, and its more modern HAL ecosystem. Compared to the STM32L4 series, the G474 offers higher clock speed (170 MHz versus 80 MHz) and a richer analog front end, which are necessary for real-time signal processing at the required sampling rates.
 
 \begin{table}[H]
     \centering
@@ -96,8 +81,6 @@ The STM32G474 was selected for several reasons:
     \end{tabular}
 \end{table}
 
-
-
 Within the IO‑Box, the STM32G474 acts as the central processing unit, coordinating
 signal acquisition, local data processing, and actuator control. It also supervises
 communication with external systems through multiple industrial protocols, making it a
@@ -105,9 +88,9 @@ key enabler of the project’s objectives.
 
 \subsection{EEPROM Memory: M95M01-RDW6TP}
 
-To complement the STM32 microcontroller and ensure reliable data storage, the IO‑Box integrates an external EEPROM memory, specifically the M95M01‑RMN6TP from STMicroelectronics. This device provides non‑volatile storage for configuration parameters, calibration data, and system logs, allowing the platform to retain critical information even after power cycles.
+To complement the STM32 microcontroller and ensure reliable data storage, the IO‑Box integrates an external EEPROM memory, specifically the M95M01‑RDW6TP from STMicroelectronics. This device provides non‑volatile storage for configuration parameters, calibration data, and system logs, allowing the platform to retain critical information even after power cycles.
 
-The M95M01‑RMN6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. It features a fast access time of 25 ns and communicates via the SPI bus, ensuring efficient integration with the STM32G474. Packaged in an 8‑pin SOIC format, it offers a compact solution suitable for embedded applications. Its endurance of up to one million write cycles and data retention of 40 years make it a robust choice for industrial environments where reliability is essential.
+The M95M01‑RDW6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. It features a fast access time of 25 ns and communicates via the SPI bus, ensuring efficient integration with the STM32G474. Packaged in an 8‑pin SOIC format, it offers a compact solution suitable for embedded applications. Its endurance of up to one million write cycles and data retention of 40 years make it a robust choice for industrial environments where reliability is essential.
 
 \begin{table}[H]
     \centering
@@ -189,7 +172,7 @@ The ENS210 is a digital sensor from ScioSense that integrates both temperature a
     \label{fig:ens210}
 \end{figure}
 
-\subsection{OPT3001DNPR Sensor}
+\subsubsection{OPT3001DNPR Sensor}
 
 The OPT3001DNPR is a digital ambient light sensor from Texas Instruments. It is designed to measure the intensity of visible light and provide results in lux units, making it ideal for applications such as automatic brightness control, display backlight adjustment, and environmental monitoring. The sensor communicates via the I\textsuperscript{2}C protocol and features built‑in calibration and linear response across a wide dynamic range.
 
@@ -249,7 +232,7 @@ Within the IO-Box platform, the HTS221TR is used to acquire ambient temperature 
         \hline
         Type & Temperature + Humidity Sensor \\
         \hline
-        Interface & I\textsuperscript{2}C / SPI \\
+        Interface & I\textsuperscript{2}C (SPI mode not used in this project) \\
         \hline
         Supply Voltage & 1.7 V -- 3.6 V \\
         \hline
@@ -275,221 +258,6 @@ Within the IO-Box platform, the HTS221TR is used to acquire ambient temperature 
     \label{fig:hts221}
 \end{figure}
 
-\section{Software tools}
-
-\subsection{Visual Studio Code}
-Visual Studio Code (VSC) is a lightweight yet powerful source code editor optimized for modern software development. It supports multiple programming languages and provides advanced features such as syntax highlighting, intelligent code completion, and debugging tools. In this project, Visual Studio Code was primarily used for version control and collaboration through Git. Extensions such as Git Graph enabled efficient visualization of commit history, branch management, and tracking of project evolution. Visual Studio Code is free and available on all major platforms (Linux, macOS, and Windows)\cite{20}.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.25\textwidth]{Figures/vs_code.jpeg}
-    \caption{Visual Studio Code interface}
-    \label{fig:vscode}
-\end{figure}
-
-\subsection{IAR Embedded Workbench}
-IAR Embedded Workbench (IAR EW) is a professional integrated development environment (IDE) dedicated to embedded systems programming, particularly for microcontrollers such as the STM32 family. It provides a highly optimized C/C++ compiler, advanced debugging capabilities, and efficient project management tools. In this project, IAR EW was used for firmware development, compilation, and debugging. Its powerful optimization features contributed to generating efficient and reliable embedded code, which is critical for real-time applications and resource-constrained systems\cite{21}.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.2\textwidth]{Figures/iar_workbench.png}
-    \caption{IAR Embedded Workbench IDE}
-    \label{fig:iar}
-\end{figure}
-
-\subsection{STM32CubeMX}
-STM32CubeMX is a graphical configuration tool developed by STMicroelectronics for STM32 microcontrollers. It allows developers to easily configure peripherals, clock settings, and pin assignments through an intuitive interface. The tool also generates initialization code based on the selected configuration, significantly reducing development time and minimizing configuration errors. In this project, STM32CubeMX was used to set up the microcontroller hardware abstraction layer (HAL), initialize peripherals such as GPIO, UART, ADC, and timers, and generate the base project structure later integrated into the development environment\cite{22}.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.4\textwidth]{Figures/stm32cubemx.png}
-    \caption{STM32CubeMX configuration interface}
-    \label{fig:cubemx}
-\end{figure}
-
-\subsection{GitLab}
-
-GitLab is employed as a collaborative platform for version control and project management. It enables developers to share code, track changes, and maintain repositories securely. Through GitLab, the team ensures transparency, reproducibility, and efficient collaboration, which are critical for academic and industrial projects alike.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.2\textwidth]{Figures/gitlab_logo.png}
-    \caption{GitLab logo}
-    \label{fig:gitlab}
-\end{figure}
-
-\section{Communication Protocols}
-
-\subsection{I2C Protocol}
-Inter-Integrated Circuit (I2C) is a synchronous, half-duplex serial communication protocol widely used for communication between integrated circuits over short distances. It relies on two bidirectional lines: the Serial Data Line (SDA) and the Serial Clock Line (SCL), both requiring pull-up resistors. The protocol follows a master-slave architecture, where the master initiates communication and generates the clock signal.
-
-Each device connected to the bus is identified by a unique address. Communication is initiated by a START condition, followed by the transmission of the slave address and a read/write bit. Data is then exchanged in 8-bit frames, each followed by an acknowledgment (ACK/NACK) bit. The communication is terminated by a STOP condition. I2C supports different speed modes, including Standard Mode (100 kHz), Fast Mode (400 kHz), and higher-speed variants.
-
-The I2C frame structure is illustrated in Figure~\ref{fig:i2c_frame}.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.9\textwidth]{Figures/i2c_frame.png}
-\caption{I2C frame format}
-\label{fig:i2c_frame}
-\end{figure}
-
-In this project, the I2C interface of the STM32G474MBTx is configured using the HAL library generated by STM32CubeMX. It is used to communicate with external peripherals such as sensors and low-speed devices. The implementation relies on interrupt or polling-based data transfers depending on timing constraints. Particular attention is given to bus stability, including proper pull-up resistor sizing and handling of potential communication errors such as bus busy states or missing acknowledgments.
-
-As shown in Figure~\ref{fig:i2c_bus}, the I2C bus allows multiple slave devices.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.6\textwidth]{Figures/i2c_bus.png}
-\caption{I2C communication bus architecture}
-\label{fig:i2c_bus}
-\end{figure}
-
-\subsection{Serial Peripheral Interface (SPI)}
-
-The Serial Peripheral Interface (SPI) is a synchronous serial communication protocol widely used in embedded systems. It enables high‑speed data exchange between a microcontroller and peripheral devices such as sensors, memory modules, or communication transceivers. SPI operates in a master–slave configuration, where the microcontroller typically acts as the master, controlling the clock and data flow.
-
-In the IO‑Box project, SPI is employed to ensure reliable and efficient communication with external modules that require fast data transfer. Its simplicity and speed make it suitable for real‑time applications, particularly when multiple peripherals must be interfaced with the STM32 microcontroller.
-
-SPI communication is based on a clock signal generated by the master device. Each bit of data is shifted out on the MOSI line while simultaneously another bit is shifted in on the MISO line. This process is synchronized by the clock (SCLK), ensuring deterministic timing. The communication sequence typically follows these steps: the master activates the Chip Select (CS) line of the desired slave, provides the clock signal, transmits data bit‑by‑bit on MOSI while receiving data on MISO, samples the data according to the configured mode, and finally deactivates the CS line to end the session. This mechanism allows full‑duplex communication, meaning data can be transmitted and received simultaneously.
-
-SPI supports four modes of operation (Mode 0 to Mode 3), determined by the configuration of clock polarity (CPOL) and clock phase (CPHA). This flexibility ensures compatibility with a wide range of peripheral devices. Key characteristics of SPI include its high speed (operating at several MHz), simple wiring with four main signals (MOSI, MISO, SCLK, CS), and scalability through multiple slave connections.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.65\textwidth]{Figures/spi_diagram.png}
-    \caption{Basic SPI communication between master and slave devices}
-    \label{fig:spi}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\textwidth]{Figures/endianness_diagram.png}
-    \caption{Comparison of Big‑endian and Little‑endian byte ordering in memory}
-    \label{fig:endianness}
-\end{figure}
-
-\subsection{UART Protocol}
-Universal Asynchronous Receiver-Transmitter (UART) is an asynchronous serial communication protocol that enables full-duplex data exchange between devices without a shared clock signal. Data is transmitted over two lines: Transmit (TX) and Receive (RX). Synchronization between devices is achieved by configuring identical communication parameters, including baud rate, data bits, parity, and stop bits.
-
-Each data frame typically consists of a start bit, followed by a configurable number of data bits (usually 8), an optional parity bit for error detection, and one or more stop bits. Unlike synchronous protocols, UART does not include a clock line, making it simpler but more sensitive to timing mismatches.
-
-In this project, UART is used for communication between the STM32 microcontroller and external systems such as a host computer or other embedded modules. It plays a key role in debugging, logging, and real-time data exchange. The implementation uses the STM32 HAL drivers with support for interrupt-driven and DMA-based transmission to ensure efficient and non-blocking communication. Error handling mechanisms, including overrun, framing, and noise errors, are also considered to improve communication reliability.
-
-The UART frame structure is illustrated in Figure~\ref{fig:uart_frame}.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.9\textwidth]{Figures/uart_frame.png}
-\caption{UART frame format}
-\label{fig:uart_frame}
-\end{figure}
-
-
-\subsection{RS485 Communication}
-RS485 is a robust differential serial communication standard widely used in industrial environments due to its high noise immunity and long-distance capabilities. Unlike single-ended UART communication, RS485 transmits data over a differential pair of lines (A and B), where the information is encoded as a voltage difference between the two conductors. This approach significantly reduces susceptibility to electromagnetic interference and ground potential differences.
-
-The RS485 standard supports half-duplex communication in multi-drop configurations, allowing multiple nodes to share the same bus. However, only one device can transmit at a time, which requires proper bus arbitration at the software level or through protocol design.
-
-In this project, RS485 communication is implemented using the UART peripheral of the STM32G474MBTx combined with an external RS485 transceiver. The transceiver converts TTL-level UART signals into differential signals suitable for the bus. A dedicated GPIO pin is used to control the Driver Enable (DE) and Receiver Enable (RE) pins of the transceiver, allowing the system to switch between transmission and reception modes.
-
-Before transmission, the microcontroller sets the DE pin high to enable the driver stage. After sending the data frame, the DE pin is reset to return the transceiver to reception mode. This timing control is critical to avoid bus contention. The communication is typically used for reliable data exchange in noisy environments, especially when longer cable lengths are required compared to standard UART.
-
-Figure~\ref{fig:rs485_bus} illustrates a typical RS485 bus configuration.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.65\textwidth]{Figures/rs485_bus.png}
-\caption{RS485 differential bus with multi-node configuration}
-\label{fig:rs485_bus}
-\end{figure}
-
-\subsection{Modbus Protocol}
-
-Modbus is one of the most widely used industrial communication protocols for exchanging data between electronic devices. Originally developed by Modicon in 1979, it follows a client-server (master-slave) architecture and enables communication between programmable logic controllers (PLCs), sensors, actuators, Human-Machine Interfaces (HMIs), and embedded systems.
-
-Modbus defines a standardized message structure that allows devices from different manufacturers to communicate using a common protocol. Two main variants are commonly used: Modbus RTU, which operates over serial communication interfaces such as RS232 and RS485, and Modbus TCP, which operates over Ethernet networks.
-
-In the IO-Box project, Modbus RTU is implemented over the RS485 physical layer to ensure reliable communication in industrial environments. The STM32G474 microcontroller acts as either a Modbus master or slave depending on the application requirements. Through Modbus registers, external systems can access sensor measurements, configuration parameters, status information, and control commands.
-
-A Modbus RTU frame consists of four main fields:
-
-\begin{itemize}
-    \item \textbf{Slave Address}: Identifies the target device.
-    \item \textbf{Function Code}: Specifies the requested operation.
-    \item \textbf{Data Field}: Contains transmitted data or register information.
-    \item \textbf{CRC Field}: Provides error detection for frame integrity.
-\end{itemize}
-
-The protocol offers several advantages for industrial applications:
-
-\begin{itemize}
-    \item Simplicity of implementation.
-    \item Wide industrial adoption.
-    \item Interoperability between devices from different vendors.
-    \item Reliable communication over long distances using RS485.
-    \item Easy integration with supervisory and SCADA systems.
-\end{itemize}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\textwidth]{Figures/modbus_rtu_frame.jpg}
-    \caption{Typical Modbus RTU frame structure}
-    \label{fig:modbus_frame}
-\end{figure}
-
-\subsection{Controller Area Network (CAN)}
-
-The Controller Area Network (CAN) is a robust serial communication protocol originally developed for automotive applications, but now widely used in industrial and embedded systems. It enables reliable data exchange between multiple devices without requiring a central host, making it ideal for distributed control systems.
-
-In the IO‑Box project, CAN is employed to ensure communication with industrial equipment and sensors that demand high reliability and fault tolerance. Its ability to handle multiple nodes on a single bus makes it particularly suitable for environments where numerous devices must share information in real time.
-
-CAN communication is based on a message‑oriented protocol. Instead of addressing specific devices directly, each message carries an identifier that defines its priority and content. This allows multiple nodes to listen simultaneously and decide whether to act on the received data. The arbitration mechanism ensures that when two nodes attempt to transmit at the same time, the message with the highest priority (lowest identifier value) wins, while the other node waits until the bus is free. This guarantees deterministic communication without collisions.
-
-Key characteristics of CAN include:
-\begin{itemize}
-    \item \textbf{Multi‑master capability}: Any node can initiate communication when the bus is idle.
-    \item \textbf{Error detection and handling}: Built‑in mechanisms such as CRC checks, acknowledgment bits, and error frames ensure data integrity.
-    \item \textbf{Priority‑based arbitration}: Messages are prioritized by identifiers, ensuring that critical data is transmitted first.
-    \item \textbf{Scalability}: Supports up to 112 nodes on a single bus, making it suitable for complex systems.
-    \item \textbf{Speed}: Operates up to 1 Mbps in classical CAN, and higher in CAN FD (Flexible Data‑Rate), which extends payload size and transmission speed.
-\end{itemize}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.70\textwidth]{Figures/trame_can.jpg}
-    \caption{Basic CAN frame}
-    \label{fig:can}
-\end{figure}
-
-In practice, CAN uses two differential lines, CAN\_H and CAN\_L, to transmit data. This differential signaling improves noise immunity and allows reliable communication even in electrically harsh environments. Each frame consists of fields such as the start of frame, identifier, control bits, data payload, CRC, and end of frame, ensuring structured and error‑resistant communication.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.70\textwidth]{Figures/can_diagram.png}
-    \caption{Basic CAN bus communication with multiple nodes}
-    \label{fig:can}
-\end{figure}
-
-\subsection{LIN Protocol}
-\nobreak{}
-Local Interconnect Network (LIN) is a low-cost serial communication protocol designed for distributed control systems, particularly in automotive applications. It operates on a single-wire physical layer and follows a strict master-slave architecture where the master node controls the entire bus communication schedule.
-
-Unlike event-driven protocols, LIN is time-triggered, meaning communication is organized into predefined frames sent at fixed intervals. Each frame consists of a header transmitted by the master and a response transmitted by a slave node. The header includes a break field (used to signal the start of a frame), a synchronization byte, and an identifier field that determines which node should respond.
-
-The data response typically contains up to 8 bytes, followed by a checksum used for error detection. LIN achieves deterministic timing by enforcing strict scheduling, making it suitable for non-critical but predictable control tasks.
-
-In this project, LIN communication is implemented using the STM32 UART peripheral configured in LIN mode. The hardware support simplifies break detection and synchronization field handling, reducing software complexity. The system can therefore reliably detect frame boundaries and process incoming data with minimal CPU overhead.
-
-The LIN frame structure is shown in Figure~\ref{fig:lin_frame}.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.7\textwidth]{Figures/lin_frame.png}
-\caption{LIN frame structure}
-\label{fig:lin_frame}
-\end{figure}
-
 \section{Peripherals}
 
 \subsection{Digital-to-Analog Converter (DAC)}
@@ -497,7 +265,7 @@ The Digital-to-Analog Converter (DAC) is an analog output peripheral integrated 
 
 The DAC can operate in several modes, including software-triggered mode, timer-triggered mode, and DMA-driven mode. In timer-triggered mode, a hardware timer periodically updates the DAC output, ensuring precise and deterministic signal timing. When combined with Direct Memory Access (DMA), the DAC can continuously output precomputed waveform data without CPU intervention, significantly improving efficiency.
 
-In this project, the DAC is used for controlled analog signal generation required for system-level testing and control purposes. Its integration with timers ensures synchronization with other system events, enabling deterministic behavior in real-time applications. This is particularly useful in embedded control systems where stable analog references or periodic waveforms are required.
+In the IOBox platform, the DAC is used to generate analog reference signals for actuator control. Two DAC channels are available, supporting both software-triggered and timer-triggered output modes. 
 
 An example of DAC signal generation is illustrated in Figure~\ref{fig:dac_waveform}.
 
@@ -570,6 +338,222 @@ Key characteristics of PWM include:
     \includegraphics[width=0.70\textwidth]{Figures/Duty_Cycle_Examples.png}
     \caption{Illustration of PWM signals with different duty cycles (25\%, 50\%, and 75\%)}
     \label{fig:pwm}
+\end{figure}
+
+\section{Communication Protocols}
+
+\subsection{I2C Protocol}
+Inter-Integrated Circuit (I2C) is a synchronous, half-duplex serial communication protocol widely used for communication between integrated circuits over short distances. It relies on two bidirectional lines: the Serial Data Line (SDA) and the Serial Clock Line (SCL), both requiring pull-up resistors. The protocol follows a master-slave architecture, where the master initiates communication and generates the clock signal.
+
+Each device connected to the bus is identified by a unique address. Data is then exchanged one byte at a time, with each byte followed by an acknowledgment bit (ACK/NACK) from the receiving device. The communication is terminated by a STOP condition. I2C supports different speed modes, including Standard Mode (100 kHz), Fast Mode (400 kHz), and higher-speed variants.
+
+The I2C frame structure is illustrated in Figure~\ref{fig:i2c_frame}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{Figures/i2c_frame.png}
+\caption{I2C frame format}
+\label{fig:i2c_frame}
+\end{figure}
+
+In this project, the I2C interface of the STM32G474MBTx is configured using the HAL library generated by STM32CubeMX. It is used to communicate with external peripherals such as sensors and low-speed devices. The implementation relies on interrupt or polling-based data transfers depending on timing constraints. Particular attention is given to bus stability, including proper pull-up resistor sizing and handling of potential communication errors such as bus busy states or missing acknowledgments.
+
+As shown in Figure~\ref{fig:i2c_bus}, the I2C bus allows multiple slave devices.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{Figures/i2c_bus.png}
+\caption{I2C communication bus architecture}
+\label{fig:i2c_bus}
+\end{figure}
+
+\subsection{Serial Peripheral Interface (SPI)}
+
+The Serial Peripheral Interface (SPI) is a synchronous serial communication protocol widely used in embedded systems. It enables high‑speed data exchange between a microcontroller and peripheral devices such as sensors, memory modules, or communication transceivers. SPI operates in a master–slave configuration, where the microcontroller typically acts as the master, controlling the clock and data flow.
+
+In the IOBOX project, SPI is employed to ensure reliable and efficient communication with external modules that require fast data transfer. Its simplicity and speed make it suitable for real‑time applications, particularly when multiple peripherals must be interfaced with the STM32 microcontroller.
+
+SPI communication is based on a clock signal generated by the master device. Each bit of data is shifted out on the MOSI line while simultaneously another bit is shifted in on the MISO line. This process is synchronized by the clock (SCLK), ensuring deterministic timing. The communication sequence typically follows these steps: the master activates the Chip Select (CS) line of the desired slave, provides the clock signal, transmits data bit‑by‑bit on MOSI while receiving data on MISO, samples the data according to the configured mode, and finally deactivates the CS line to end the session. This mechanism allows full‑duplex communication, meaning data can be transmitted and received simultaneously.
+
+SPI supports four modes of operation (Mode 0 to Mode 3), determined by the configuration of clock polarity (CPOL) and clock phase (CPHA). This flexibility ensures compatibility with a wide range of peripheral devices. Key characteristics of SPI include its high speed (operating at several MHz), simple wiring with four main signals (MOSI, MISO, SCLK, CS), and scalability through multiple slave connections.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{Figures/spi_diagram.png}
+    \caption{Basic SPI communication between master and slave devices}
+    \label{fig:spi}
+\end{figure}
+
+\subsection{UART Protocol}
+Universal Asynchronous Receiver-Transmitter (UART) is an asynchronous serial communication protocol that enables full-duplex data exchange between devices without a shared clock signal. Data is transmitted over two lines: Transmit (TX) and Receive (RX). Synchronization between devices is achieved by configuring identical communication parameters, including baud rate, data bits, parity, and stop bits.
+
+Each data frame typically consists of a start bit, followed by a configurable number of data bits (usually 8), an optional parity bit for error detection, and one or more stop bits. Unlike synchronous protocols, UART does not include a clock line, making it simpler but more sensitive to timing mismatches.
+
+In this project, UART is used for communication between the STM32 microcontroller and external systems such as a host computer or other embedded modules. It plays a key role in debugging, logging, and real-time data exchange. The implementation uses the STM32 HAL drivers with support for interrupt-driven and DMA-based transmission to ensure efficient and non-blocking communication. Error handling mechanisms, including overrun, framing, and noise errors, are also considered to improve communication reliability.
+
+The UART frame structure is illustrated in Figure~\ref{fig:uart_frame}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{Figures/uart_frame.png}
+\caption{UART frame format}
+\label{fig:uart_frame}
+\end{figure}
+
+
+\subsection{RS485 Communication}
+RS485 is a robust differential serial communication standard widely used in industrial environments due to its high noise immunity and long-distance capabilities. Unlike single-ended UART communication, RS485 transmits data over a differential pair of lines (A and B), where the information is encoded as a voltage difference between the two conductors. This approach significantly reduces susceptibility to electromagnetic interference and ground potential differences.
+
+The RS485 standard supports half-duplex communication in multi-drop configurations, allowing multiple nodes to share the same bus. However, only one device can transmit at a time, which requires proper bus arbitration at the software level or through protocol design.
+
+In this project, RS485 serves as the physical layer for Modbus RTU communication. A dedicated UART peripheral (USART3) is used with an external RS485 transceiver to convert TTL logic levels to differential signals. Direction control is managed in software, as described in Chapter 3.
+
+Before transmission, the microcontroller sets the DE pin high to enable the driver stage. After sending the data frame, the DE pin is reset to return the transceiver to reception mode. This timing control is critical to avoid bus contention. The communication is typically used for reliable data exchange in noisy environments, especially when longer cable lengths are required compared to standard UART.
+
+Figure~\ref{fig:rs485_bus} illustrates a typical RS485 bus configuration.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{Figures/rs485_bus.png}
+\caption{RS485 differential bus with multi-node configuration}
+\label{fig:rs485_bus}
+\end{figure}
+
+\subsection{Modbus Protocol}
+
+Modbus is one of the most widely used industrial communication protocols for exchanging data between electronic devices. Originally developed by Modicon in 1979, it follows a client-server (master-slave) architecture and enables communication between programmable logic controllers (PLCs), sensors, actuators, Human-Machine Interfaces (HMIs), and embedded systems.
+
+Modbus defines a standardized message structure that allows devices from different manufacturers to communicate using a common protocol. Two main variants are commonly used: Modbus RTU, which operates over serial communication interfaces such as RS232 and RS485, and Modbus TCP, which operates over Ethernet networks.
+
+In the IOBOX project, Modbus RTU is implemented over the RS485 physical layer to ensure reliable communication in industrial environments. The STM32G474 microcontroller acts as either a Modbus master or slave depending on the application requirements. Through Modbus registers, external systems can access sensor measurements, configuration parameters, status information, and control commands.
+
+In this project, the IOBox operates as a Modbus RTU slave at address 0x01, communicating over RS485 at 19,200 bps. The slave implementation supports function codes FC01 through FC06, FC15, and FC16. Input registers expose real-time sensor measurements (temperature, humidity, illuminance) to any connected Modbus master, and holding registers allow actuator control. The implementation details are described in Chapter 3.
+
+A Modbus RTU frame consists of four main fields:
+
+\begin{itemize}
+    \item \textbf{Slave Address}: Identifies the target device.
+    \item \textbf{Function Code}: Specifies the requested operation.
+    \item \textbf{Data Field}: Contains transmitted data or register information.
+    \item \textbf{CRC Field}: Provides error detection for frame integrity.
+\end{itemize}
+
+The protocol offers several advantages for industrial applications:
+
+\begin{itemize}
+    \item Simplicity of implementation.
+    \item Wide industrial adoption.
+    \item Interoperability between devices from different vendors.
+    \item Reliable communication over long distances using RS485.
+    \item Easy integration with supervisory and SCADA systems.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Figures/modbus_rtu_frame.jpg}
+    \caption{Typical Modbus RTU frame structure}
+    \label{fig:modbus_frame}
+\end{figure}
+
+\subsection{Controller Area Network (CAN)}
+
+The Controller Area Network (CAN) is a robust serial communication protocol originally developed for automotive applications, but now widely used in industrial and embedded systems. It enables reliable data exchange between multiple devices without requiring a central host, making it ideal for distributed control systems.
+
+In the IOBOX project, CAN is employed to ensure communication with industrial equipment and sensors that demand high reliability and fault tolerance. Its ability to handle multiple nodes on a single bus makes it particularly suitable for environments where numerous devices must share information in real time.
+
+CAN communication is based on a message‑oriented protocol. Instead of addressing specific devices directly, each message carries an identifier that defines its priority and content. This allows multiple nodes to listen simultaneously and decide whether to act on the received data. The arbitration mechanism ensures that when two nodes attempt to transmit at the same time, the message with the highest priority (lowest identifier value) wins, while the other node waits until the bus is free. This guarantees deterministic communication without collisions.
+
+Key characteristics of CAN include:
+\begin{itemize}
+    \item \textbf{Multi‑master capability}: Any node can initiate communication when the bus is idle.
+    \item \textbf{Error detection and handling}: Built‑in mechanisms such as CRC checks, acknowledgment bits, and error frames ensure data integrity.
+    \item \textbf{Priority‑based arbitration}: Messages are prioritized by identifiers, ensuring that critical data is transmitted first.
+    \item \textbf{Scalability}: Supports up to 112 nodes on a single bus, making it suitable for complex systems.
+    \item \textbf{Speed}: Operates up to 1 Mbps in classical CAN, and higher in CAN FD (Flexible Data‑Rate), which extends payload size and transmission speed.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\textwidth]{Figures/trame_can.jpg}
+    \caption{Basic CAN frame}
+    \label{fig:can_frame}
+\end{figure}
+
+In practice, CAN uses two differential lines, CAN\_H and CAN\_L, to transmit data. This differential signaling improves noise immunity and allows reliable communication even in electrically harsh environments. Each frame consists of fields such as the start of frame, identifier, control bits, data payload, CRC, and end of frame, ensuring structured and error‑resistant communication.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.70\textwidth]{Figures/can_diagram.png}
+    \caption{Basic CAN bus communication with multiple nodes}
+    \label{fig:can_bus}
+\end{figure}
+
+\subsection{LIN Protocol}
+\nobreak{}
+Local Interconnect Network (LIN) is a low-cost serial communication protocol designed for distributed control systems, particularly in automotive applications. It operates on a single-wire physical layer and follows a strict master-slave architecture where the master node controls the entire bus communication schedule.
+
+Unlike event-driven protocols, LIN is time-triggered, meaning communication is organized into predefined frames sent at fixed intervals. Each frame consists of a header transmitted by the master and a response transmitted by a slave node. The header includes a break field (used to signal the start of a frame), a synchronization byte, and an identifier field that determines which node should respond.
+
+The data response typically contains up to 8 bytes, followed by a checksum used for error detection. LIN achieves deterministic timing by enforcing strict scheduling, making it suitable for non-critical but predictable control tasks.
+
+In this project, LIN communication is implemented using the STM32 UART peripheral configured in LIN mode. The hardware support simplifies break detection and synchronization field handling, reducing software complexity. The system can therefore reliably detect frame boundaries and process incoming data with minimal CPU overhead.
+
+The LIN frame structure is shown in Figure~\ref{fig:lin_frame}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{Figures/lin_frame.png}
+\caption{LIN frame structure}
+\label{fig:lin_frame}
+\end{figure}
+
+\section{Software tools}
+
+\subsection{Visual Studio Code}
+Visual Studio Code (VS Code) is a lightweight yet powerful source code editor optimized for modern software development. It supports multiple programming languages and provides advanced features such as syntax highlighting, intelligent code completion, and debugging tools. 
+
+In this project, Visual Studio Code was used as the primary text editor for documentation, script editing, and Git-based version control. Extensions such as Git Graph enabled visualization of commit history, branch management, and tracking of code evolution across the development team.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.25\textwidth]{Figures/vs_code.jpeg}
+    \caption{Visual Studio Code interface}
+    \label{fig:vscode}
+\end{figure}
+
+\subsection{IAR Embedded Workbench}
+IAR Embedded Workbench (IAR EW) is a professional integrated development environment (IDE) dedicated to embedded systems programming, particularly for microcontrollers such as the STM32 family. It provides a highly optimized C/C++ compiler, advanced debugging capabilities, and efficient project management tools. 
+
+In this project, IAR EW was used for firmware development, compilation, and debugging. Its powerful optimization features contributed to generating efficient and reliable embedded code, which is critical for real-time applications and resource-constrained systems\cite{21}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.2\textwidth]{Figures/iar_workbench.png}
+    \caption{IAR Embedded Workbench IDE}
+    \label{fig:iar}
+\end{figure}
+
+\subsection{STM32CubeMX}
+STM32CubeMX is a graphical configuration tool developed by STMicroelectronics for STM32 microcontrollers. It allows developers to easily configure peripherals, clock settings, and pin assignments through an intuitive interface. The tool also generates initialization code based on the selected configuration, significantly reducing development time and minimizing configuration errors. 
+
+In this project, STM32CubeMX was used in a limited capacity: it was invoked once at the beginning of the project to generate the initial project skeleton, configure the system clock (HSI PLL at 170 MHz), and enable the Serial Wire Debug interface. The peripheral initialization functions that CubeMX would normally generate were intentionally not used. Instead, all peripheral drivers were developed as handwritten BSP (Board Support Package) modules, which are described in detail in Chapter 3. CubeMX thus served exclusively as a project scaffolding and clock configuration tool.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/stm32cubemx.png}
+    \caption{STM32CubeMX configuration interface}
+    \label{fig:cubemx}
+\end{figure}
+
+\subsection{GitLab}
+
+GitLab was used as the version control and collaboration platform throughout the project. The repository was organized by module (BSP, Managers, Application), with branches used to isolate feature development and avoid conflicts during parallel work. Commit history served as a development log, and merge requests were used to review code before integrating changes into the main branch.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.2\textwidth]{Figures/gitlab_logo.png}
+    \caption{GitLab logo}
+    \label{fig:gitlab}
 \end{figure}
 
 \subsection{Conclusion}
