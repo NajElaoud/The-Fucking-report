@@ -140,14 +140,14 @@ The M95M01‑RMN6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\textwidth]{Figures/eeprom.png}
+    \includegraphics[width=0.5\textwidth]{Figures/eeprom.png}
     \caption{M95M01‑RDW6TP EEPROM memory chip}
     \label{fig:eeprom}
 \end{figure}
 
 \subsection{Sensors}
 
-In the IO‑Box project, several sensors were integrated to enable environmental and physical measurements. Our work focused not only on interfacing these sensors with the STM32G474 microcontroller, but also on configuring their registers, managing communication protocols, and performing calibration to ensure accurate data acquisition. Each sensor was studied in detail, and its characteristics were documented to highlight its role within the system.
+In the IOBox project, several sensors were integrated to enable environmental and physical measurements. Our work focused not only on interfacing these sensors with the STM32G474 microcontroller, but also on configuring their registers, managing communication protocols, and performing calibration to ensure accurate data acquisition. Each sensor was studied in detail, and its characteristics were documented to highlight its role within the system.
 
 \subsubsection{ENS210 Sensor}
 
@@ -184,7 +184,7 @@ The ENS210 is a digital sensor from ScioSense that integrates both temperature a
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.4\textwidth]{Figures/ens210.jpg}
+    \includegraphics[width=0.3\textwidth]{Figures/ens210.jpg}
     \caption{ENS210 digital temperature and humidity sensor}
     \label{fig:ens210}
 \end{figure}
@@ -270,7 +270,7 @@ Within the IO-Box platform, the HTS221TR is used to acquire ambient temperature 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.35\textwidth]{Figures/hts221.jpg}
+    \includegraphics[width=0.3\textwidth]{Figures/hts221.jpg}
     \caption{HTS221TR temperature and humidity sensor}
     \label{fig:hts221}
 \end{figure}
@@ -282,7 +282,7 @@ Visual Studio Code (VSC) is a lightweight yet powerful source code editor optimi
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.3\textwidth]{Figures/vs_code.jpeg}
+    \includegraphics[width=0.25\textwidth]{Figures/vs_code.jpeg}
     \caption{Visual Studio Code interface}
     \label{fig:vscode}
 \end{figure}
@@ -302,7 +302,7 @@ STM32CubeMX is a graphical configuration tool developed by STMicroelectronics fo
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/stm32cubemx.png}
+    \includegraphics[width=0.4\textwidth]{Figures/stm32cubemx.png}
     \caption{STM32CubeMX configuration interface}
     \label{fig:cubemx}
 \end{figure}
@@ -512,7 +512,7 @@ An example of DAC signal generation is illustrated in Figure~\ref{fig:dac_wavefo
 
 The Analog‑to‑Digital Converter (ADC) is a fundamental peripheral in embedded systems, responsible for transforming continuous analog signals into discrete digital values that can be processed by the microcontroller. This conversion is essential for applications where physical phenomena such as temperature, pressure, or current must be measured and interpreted by digital logic.
 
-In the IO‑Box project, ADCs are employed to acquire signals from sensors and external modules, enabling precise monitoring and control. The STM32G474 microcontroller integrates multiple high‑resolution ADC channels, allowing simultaneous sampling of different inputs. This capability is particularly important in industrial contexts where multiple signals must be captured in real time.
+In the IOBox project, ADCs are employed to acquire signals from sensors and external modules, enabling precise monitoring and control. The STM32G474 microcontroller integrates multiple high‑resolution ADC channels, allowing simultaneous sampling of different inputs. This capability is particularly important in industrial contexts where multiple signals must be captured in real time.
 
 The operation of an ADC follows a well‑defined process. The analog input is sampled at regular intervals determined by the sampling frequency. Each sample is then quantized into a digital value according to the converter’s resolution (e.g., 12‑bit or 16‑bit). The resulting digital word represents the amplitude of the analog signal at that instant. The accuracy of this conversion depends on factors such as resolution, sampling rate, and reference voltage stability.
 
