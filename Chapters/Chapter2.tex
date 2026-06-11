@@ -9,23 +9,57 @@
 \cfoot{\thepage}
 
 \section{Introduction}
+<<<<<<< HEAD
 This chapter talks about the technical setup and the main parts used to build the IO-Box platform. It covers the hardware and software that make up the system, like the STM32G474 microcontroller,  external peripherals, sensors, tools for development, and communication protocols.
 
 The chapter also explains the main STM32 parts used in the project, such as Analog-to-Digital Converters (ADC), Digital-to-Analog Converters (DAC), timers, and Pulse Width Modulation (PWM) features.
 Knowing about these technologies is important for understanding the design and how things work, which will be explained in the next chapters.
+=======
+This chapter presents the technical environment and the main components used in the development of the IOBOX platform. It introduces the hardware and software resources that form the basis of the system, including the STM32G474 microcontroller, external peripherals, sensors, development tools, and communication protocols.
+>>>>>>> a15e0a982f2f6d5766b8147a7f12c9c22426e956
 
 
+<<<<<<< HEAD
 \section{General Concept of the IO-Box Platform}
 The IO-Box is a customizable industrial Input/Output system that helps connect sensors, actuators, and communication tools in IoT and automation setups.
+=======
+\section{General Concept of the IOBOX Platform}
+The IOBOX is a configurable industrial Input/Output platform designed to facilitate the integration of sensors, actuators, and industrial communication interfaces within IoT and automation systems.
+>>>>>>> a15e0a982f2f6d5766b8147a7f12c9c22426e956
 
 It works as a bridge between field devices and control systems by gathering data from sensors, handling that data, managing external equipment, and sharing information using different communication protocols.
 
+<<<<<<< HEAD
+=======
+Its modular architecture allows different hardware modules and software functionalities to be integrated according to application requirements. This flexibility makes the IOBOX suitable for a wide range of industrial monitoring, automation, and data acquisition applications.
+>>>>>>> a15e0a982f2f6d5766b8147a7f12c9c22426e956
 
 The system is built with a modular design, meaning it can include various hardware parts and software features based on what's needed for each project.
 This adaptability makes it useful for many industrial tasks like monitoring, automating, and collecting data.
 
 All these features—like strong embedded processing, multiple communication options, the ability to read both analog and digital signals, and reliable storage—are combined into one easy-to-use device.
 %__Part 2 of Chapter 2: General concept and system components
+\section{IOBOX Hardware architecture}
+The microcontroller operates from a 3.3~V power supply and can be programmed and debugged through dedicated JTAG/SWD and UART interfaces. It provides several input and output resources, including four analog input channels connected to the ADC peripherals, seven digital input channels, seven digital output channels, and four PWM outputs for actuator control applications.
+
+For analog signal generation, the platform integrates DAC outputs capable of producing industrial-standard 4--20~mA current signals. These outputs enable the IOBOX to interface directly with industrial control equipment and monitoring systems.
+
+The platform supports a wide range of communication protocols to ensure compatibility with industrial and IoT environments. A USB interface is available for configuration and data exchange, while an SPI interface provides high-speed communication. Multiple I\textsuperscript{2}C buses are used for sensor integration and peripheral expansion.
+
+Industrial communication capabilities are implemented through dedicated \linebreak transceivers. To ensure compatibility with modern industrial networks, the IOBOX integrates a TCAN330GD transceiver that enables CAN FD communication between the STM32G474 and external equipment. LIN communication is achieved through the TJA1020 LIN transceiver, while RS485 communication is implemented using the THVD1410 transceiver, enabling reliable long-distance communication and Modbus RTU integration.
+
+To extend the number of available communication channels, the architecture incorporates a TCP9548A I\textsuperscript{2}C multiplexer, which expands a single I\textsuperscript{2}C bus into eight independent channels. Additionally, a PCF8574 I/O expander controls two CD74HC4051 multiplexers, allowing the selection of up to eight UART communication channels through a reduced number of microcontroller pins.
+
+All interfaces are routed to dedicated external connectors, facilitating the connection of sensors, actuators, and external industrial equipment. This modular and scalable architecture provides the flexibility required for industrial automation, monitoring, data acquisition, and IoT applications while maintaining the possibility of future hardware and software extensions.
+
+Figure~\ref{fig:synoptic_architecture} presents the overall synoptic architecture of the IOBOX platform. The system is centered around the STM32G474MBTx microcontroller, which acts as the main processing unit and coordinates data acquisition, signal processing, communication, and control functions.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/schema_synoptique.png}
+    \caption{Synoptic architecture of the IOBOX platform}
+    \label{fig:synoptic_architecture}
+\end{figure}
+
 \section{Hardware components}
 
 \subsection{STM32G474MBTx Microcontroller}
@@ -80,11 +114,22 @@ The STM32G474 was chosen instead of the STM32F4 series because it has more ADC u
     \end{tabular}
 \end{table}
 
+<<<<<<< HEAD
 Inside the IO-Box, the STM32G474 serves as the main processor. It handles tasks like collecting signals, processing data locally, and controlling actuators. Additionally, it manages communication with other systems using various industrial protocols, which is essential for achieving the project's goals.
 
 \subsection{EEPROM Memory: M95M01-RDW6TP}
 
 To manage the work with the STM32 microcontroller and make sure data is stored reliably, the IO-Box uses an external EEPROM memory called the M95M01-RDW6TP from STMicroelectronics. This device stores important information like settings, calibration data, and system logs, so the system can keep this data even when the power is turned off.
+=======
+Within the IOBOX, the STM32G474 acts as the central processing unit, coordinating
+signal acquisition, local data processing, and actuator control. It also supervises
+communication with external systems through multiple industrial protocols, making it a
+key enabler of the project’s objectives.
+
+\subsection{EEPROM Memory: M95M01-RDW6TP}
+
+To complement the STM32 microcontroller and ensure reliable data storage, the IOBOX integrates an external EEPROM memory, specifically the M95M01‑RDW6TP from STMicroelectronics. This device provides non‑volatile storage for configuration parameters, calibration data, and system logs, allowing the platform to retain critical information even after power cycles.
+>>>>>>> a15e0a982f2f6d5766b8147a7f12c9c22426e956
 
 The M95M01-RDW6TP is a 1-Mbit serial EEPROM that is organized into 131,072 memory locations, each holding 8 bits.
 It has a fast response time of 25 nanoseconds and connects through the SPI bus, which makes it easy to use with the STM32G474. It comes in an 8-pin SOIC package, making it a small and efficient option for embedded systems. It can handle up to one million write operations and keeps data safely for up to 40 years, making it a dependable choice for industrial uses where reliability is key.
@@ -127,7 +172,11 @@ It has a fast response time of 25 nanoseconds and connects through the SPI bus, 
 
 \subsection{Sensors}
 
+<<<<<<< HEAD
 In the IOBox project, we added several sensors to measure different environmental and physical conditions. Our main task was to connect these sensors to the STM32G474 microcontroller, set up their settings, handle how they communicate, and do some testing to make sure the data they collect is correct. We looked closely at each sensor, learned about how they work, and wrote down their features to show how each one contributes to the whole system.
+=======
+In the IOBOX project, several sensors were integrated to enable environmental and physical measurements. Our work focused not only on interfacing these sensors with the STM32G474 microcontroller, but also on configuring their registers, managing communication protocols, and performing calibration to ensure accurate data acquisition. Each sensor was studied in detail, and its characteristics were documented to highlight its role within the system.
+>>>>>>> a15e0a982f2f6d5766b8147a7f12c9c22426e956
 
 \subsubsection{ENS210 Sensor}
 
@@ -215,7 +264,7 @@ Work was done on its internal settings to set up different measurement modes, se
 
 The HTS221TR is a capacitive digital humidity and temperature sensor developed by STMicroelectronics. It integrates sensing elements and signal conditioning circuitry within a compact package, providing calibrated measurements through a standard I\textsuperscript{2}C interface. The sensor is designed for low-power applications while maintaining good measurement accuracy, making it suitable for environmental monitoring and industrial IoT systems.
 
-Within the IO-Box platform, the HTS221TR is used to acquire ambient temperature and relative humidity data. Its factory-calibrated coefficients simplify integration and improve measurement reliability. Communication with the STM32G474 microcontroller is achieved through the I\textsuperscript{2}C bus, and dedicated software drivers were developed to configure the device and process sensor data.
+Within the IOBOX platform, the HTS221TR is used to acquire ambient temperature and relative humidity data. Its factory-calibrated coefficients simplify integration and improve measurement reliability. Communication with the STM32G474 microcontroller is achieved through the I\textsuperscript{2}C bus, and dedicated software drivers were developed to configure the device and process sensor data.
 
 \begin{table}[H]
     \centering
@@ -268,7 +317,7 @@ An example of DAC signal generation is illustrated in Figure~\ref{fig:dac_wavefo
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.5\textwidth]{Figures/dac_waveform.png}
+\includegraphics[width=0.65\textwidth]{Figures/dac_waveform.png}
 \caption{Example of analog signal generated by DAC}
 \label{fig:dac_waveform}
 \end{figure}
@@ -332,8 +381,8 @@ Key characteristics of PWM include:
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.70\textwidth]{Figures/Duty_Cycle_Examples.png}
-    \caption{Illustration of PWM signals with different duty cycles (25\%, 50\%, and 75\%)}
+    \includegraphics[width=0.6\textwidth]{Figures/Duty_Cycle_Examples.png}
+    \caption{Illustration of PWM signals with different duty cycles}
     \label{fig:pwm}
 \end{figure}
 
@@ -348,7 +397,7 @@ The I2C frame structure is illustrated in Figure~\ref{fig:i2c_frame}.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.9\textwidth]{Figures/i2c_frame.png}
+\includegraphics[width=0.7\textwidth]{Figures/i2c_frame.png}
 \caption{I2C frame format}
 \label{fig:i2c_frame}
 \end{figure}
@@ -359,7 +408,7 @@ As shown in Figure~\ref{fig:i2c_bus}, the I2C bus allows multiple slave devices.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.6\textwidth]{Figures/i2c_bus.png}
+\includegraphics[width=0.7\textwidth]{Figures/i2c_bus.png}
 \caption{I2C communication bus architecture}
 \label{fig:i2c_bus}
 \end{figure}
@@ -410,10 +459,10 @@ Before transmission, the microcontroller sets the DE pin high to enable the driv
 Figure~\ref{fig:rs485_bus} illustrates a typical RS485 bus configuration.
 
 \begin{figure}[h]
-\centering
-\includegraphics[width=0.65\textwidth]{Figures/rs485_bus.png}
-\caption{RS485 differential bus with multi-node configuration}
-\label{fig:rs485_bus}
+    \centering
+    \includegraphics[width=0.65\textwidth]{Figures/rs485_bus.png}
+    \caption{RS485 differential bus with multi-node configuration}
+    \label{fig:rs485_bus}
 \end{figure}
 
 \subsection{Modbus Protocol}
@@ -435,22 +484,43 @@ A Modbus RTU frame consists of four main fields:
     \item \textbf{CRC Field}: Provides error detection for frame integrity.
 \end{itemize}
 
-The protocol offers several advantages for industrial applications:
-
-\begin{itemize}
-    \item Simplicity of implementation.
-    \item Wide industrial adoption.
-    \item Interoperability between devices from different vendors.
-    \item Reliable communication over long distances using RS485.
-    \item Easy integration with supervisory and SCADA systems.
-\end{itemize}
-
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/modbus_rtu_frame.jpg}
+    \includegraphics[width=0.8\textwidth]{Figures/modbus_rtu_frame.jpg}
     \caption{Typical Modbus RTU frame structure}
     \label{fig:modbus_frame}
 \end{figure}
+
+To ensure compatibility with standard industrial devices, the implementation supports a subset of Modbus function codes, classified according to their role in data access and control:
+
+\begin{table}[H]
+    \centering
+    \caption{Supported Modbus Function Codes in the IOBOX Platform}
+    \label{tab:modbus_function_codes}
+    \begin{tabular}{|c|c|p{7cm}|}
+    \hline
+    \textbf{Function Code} & \textbf{Name} & \textbf{Description} \\
+    \hline
+    FC01 & Read Coils & Reads digital output states (ON/OFF status) \\
+    \hline
+    FC02 & Read Discrete Inputs & Reads digital input signals from sensors or switches \\
+    \hline
+    FC03 & Read Holding Registers & Reads configuration and control registers (16-bit) \\
+    \hline
+    FC04 & Read Input Registers & Reads real-time measurement data (sensor values) \\
+    \hline
+    FC05 & Write Single Coil & Controls a single digital output (ON/OFF command) \\
+    \hline
+    FC06 & Write Single Register & Writes a single 16-bit configuration or control value \\
+    \hline
+    FC15 & Write Multiple Coils & Updates multiple digital outputs in one request \\
+    \hline
+    FC16 & Write Multiple Registers & Writes multiple registers for bulk configuration/control \\
+    \hline
+    \end{tabular}
+\end{table}
+
+This classification enables structured interaction with the IOBOX memory map, separating real-time acquisition data (input registers) from controllable parameters (holding registers). It also ensures interoperability with a wide range of Modbus-compatible supervisory systems such as SCADA platforms and PLCs.
 
 \subsection{Controller Area Network (CAN)}
 
@@ -499,7 +569,7 @@ The LIN frame structure is shown in Figure~\ref{fig:lin_frame}.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\textwidth]{Figures/lin_frame.png}
+\includegraphics[width=0.8\textwidth]{Figures/lin_frame.png}
 \caption{LIN frame structure}
 \label{fig:lin_frame}
 \end{figure}
@@ -513,7 +583,7 @@ In this project, Visual Studio Code was used as the primary text editor for docu
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.25\textwidth]{Figures/vs_code.jpeg}
+    \includegraphics[width=0.2\textwidth]{Figures/vs_code.jpeg}
     \caption{Visual Studio Code interface}
     \label{fig:vscode}
 \end{figure}

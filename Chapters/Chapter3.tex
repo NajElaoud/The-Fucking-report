@@ -9,12 +9,1034 @@
 \cfoot{\thepage}
 
 \section{Introduction}
+The preceding chapters established the project context, defined the platform requirements, 
+and presented the hardware components and communication protocols that form the technical 
+foundation of the IOBOX platform. This chapter details the design decisions and practical 
+implementation work carried out to bring that foundation into a functional embedded system.
 
+The implementation is organized around a layered software architecture that separates 
+hardware-specific code from higher-level application logic. At the lowest level, a Board 
+Support Package (BSP) provides direct peripheral drivers for every hardware interface 
+present on the platform. Above it, a Manager layer encapsulates the communication 
+protocols and sensor drivers, exposing clean, hardware-independent APIs to the rest of 
+the system. At the top, the Application layer coordinates all modules through a 
+lightweight cooperative task scheduler and assembles sensor data into structured 
+output frames.
+
+The chapter begins by describing the hardware architecture of the IOBOX platform, 
+followed by a detailed account of the software architecture and its constituent layers. 
+Each subsection covers the design rationale, the implementation approach, and the key 
+technical choices made during development. The chapter concludes with a summary of the 
+results obtained and a discussion of the platform's readiness for industrial deployment.
 \section{Hardware architecture}
 
-\section{Software architecture}
-\subsection{Board support package (BSP) layer}
-\subsection{Manager layer}
-\subsection{Application layer}
+
+\section{Software Architecture}
+
+The firmware of the IOBOX platform is organised into three distinct horizontal layers: 
+the Board Support Package (BSP), the Manager layer, and the Application layer. This 
+separation was adopted to isolate hardware-specific code from protocol logic and 
+application behaviour, enabling each layer to evolve independently. A central 
+configuration file, \texttt{feature\_config.h}, governs the compile-time inclusion of 
+every hardware feature through preprocessor flags, ensuring that only the peripherals 
+and protocols required for a given deployment are compiled into the firmware binary.
+
+A single global structure, \texttt{SystemBoard}, declared in 
+\texttt{feature\_config.h} and instantiated in \texttt{main.c}, serves as the shared 
+data exchange point between all layers. It aggregates real-time sensor readings, CAN 
+frame data, and status information, and is accessed directly by the Manager and 
+Application layers during each execution cycle.
+
+% --- Figure: layered software architecture diagram ---
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.75\textwidth]{Figures/software_architecture.png}
+    \caption{Layered software architecture of the IOBOX platform}
+    \label{fig:software_architecture}
+\end{figure}
+
+The following subsections describe each layer in detail, from the lowest hardware 
+abstraction level up to the application logic.
+
+%------------------------------------------------------------------
+\subsection{Board Support Package Layer}
+%------------------------------------------------------------------
+
+The Board Support Package constitutes the lowest layer of the firmware stack. It 
+provides a collection of peripheral driver modules, each encapsulating the 
+initialisation, configuration, and data transfer routines for a single hardware 
+interface. By confining all register-level and HAL-level operations to this layer, the 
+upper layers are shielded from hardware-specific details and can interact with 
+peripherals exclusively through the BSP's public API.
+
+Each BSP module follows a consistent structure: a header file located under 
+\texttt{BSP/Inc/} declares the public API, while the corresponding source file under 
+\texttt{BSP/Src/} contains the implementation. The platform exposes BSP modules for the 
+following peripheral categories.
+
+Serial communication interfaces are covered by \texttt{BSP\_USART1}, 
+\texttt{BSP\_USART2}, \texttt{BSP\_UART5}, and \texttt{BSP\_LPUART1} for general-purpose 
+asynchronous communication, by \texttt{BSP\_RS485} for the half-duplex differential bus 
+used by the Modbus RTU stack, by \texttt{BSP\_LIN} for the single-wire LIN bus, and by 
+\texttt{BSP\_UART\_MUX} for the software-controlled UART channel multiplexer. 
+High-speed synchronous communication is handled by three independent SPI drivers: 
+\texttt{BSP\_SPI1}, \texttt{BSP\_SPI2}, and \texttt{BSP\_SPI4}. Sensor and 
+peripheral expansion buses are served by \texttt{BSP\_I2C2} and \texttt{BSP\_I2C3}, 
+complemented by \texttt{BSP\_I2C\_MUX}, which controls the TCA9548A eight-channel I\textsuperscript{2}C 
+multiplexer. The CAN interface is abstracted by \texttt{CAN1\_BSP}, and digital 
+input/output operations are centralised in \texttt{BSP\_DigitalIO}.
+
+Analog peripherals are equally covered: four ADC drivers (\texttt{ADC1\_BSP}, 
+\texttt{ADC3\_BSP}, \texttt{ADC4\_BSP}, \texttt{ADC5\_BSP}) expose acquisition 
+functions for each active conversion channel, while two DAC drivers 
+(\texttt{BSP\_DAC1} and \texttt{BSP\_DAC2}) provide voltage output generation. 
+Four timer drivers (\texttt{TIM1\_BSP} through \texttt{TIM4\_BSP}) manage 
+time-base and PWM generation. A low-power management module, \texttt{BSP\_LowPower}, 
+groups the power mode transition routines.
+
+This modular decomposition means that porting the firmware to a different STM32 
+variant requires changes only within the BSP layer, leaving the Manager and 
+Application layers unmodified.
+
+%------------------------------------------------------------------
+\subsection{Manager Layer}
+%------------------------------------------------------------------
+
+The Manager layer sits above the BSP and is responsible for implementing device 
+protocols, sensor acquisition sequences, and data processing logic. Each manager 
+module depends exclusively on BSP APIs and writes its results into the shared 
+\texttt{SystemBoard} structure, making the layer's outputs immediately available 
+to the Application layer without direct coupling between managers.
+
+\subsubsection{Sensor Managers}
+
+Three sensor manager modules were developed, one per physical sensor, each 
+handling I\textsuperscript{2}C multiplexer channel selection, register-level 
+communication, and raw-to-physical conversion.
+
+The HTS221TR manager, implemented in \texttt{HTS221TR\_Manager.c}, drives the 
+STMicroelectronics capacitive humidity and temperature sensor connected to 
+I\textsuperscript{2}C multiplexer channel~0. During initialisation, the module 
+reads the sensor's factory calibration coefficients stored in its one-time 
+programmable memory across registers \texttt{0x30}--\texttt{0x3F}, computes the 
+four reference points for humidity (\texttt{H0\_rH}, \texttt{H1\_rH}, 
+\texttt{H0\_T0\_out}, \texttt{H1\_T0\_out}) and the two ten-bit temperature 
+reference points (\texttt{T0\_degC}, \texttt{T1\_degC}, \texttt{T0\_out}, 
+\texttt{T1\_out}), and stores them in a private \texttt{HTS221\_Calibration\_t} 
+structure. Subsequent acquisitions apply linear interpolation between these 
+reference points to convert the 16-bit raw ADC output into calibrated 
+temperature in degrees Celsius and relative humidity in percent, as shown in 
+Equation~\ref{eq:hts221_hum} and Equation~\ref{eq:hts221_temp}.
+
+\begin{equation}
+    \%\mathrm{RH} = H_{0\_rH} + \frac{(H_{1\_rH} - H_{0\_rH}) \cdot (\mathrm{raw} - H_{0\_T0\_out})}{H_{1\_T0\_out} - H_{0\_T0\_out}}
+    \label{eq:hts221_hum}
+\end{equation}
+
+\begin{equation}
+    T\ [^\circ\mathrm{C}] = T_{0\_degC} + \frac{(T_{1\_degC} - T_{0\_degC}) \cdot (\mathrm{raw} - T_{0\_out})}{T_{1\_out} - T_{0\_out}}
+    \label{eq:hts221_temp}
+\end{equation}
+
+Data readiness is verified by polling the \texttt{STATUS\_REG} register before 
+each acquisition. If the data-ready flag is not asserted within a configurable 
+retry count, the function returns \texttt{HTS221\_TIMEOUT} without blocking 
+the system further.
+
+The ENS210 manager, implemented in \texttt{ENS210\_manager.c}, interfaces with 
+the ScioSense combined temperature and humidity sensor on multiplexer channel~2. 
+The module operates in single-shot mode: a measurement is triggered by writing 
+\texttt{0x03} to the \texttt{SENS\_START} register, a fixed 10-millisecond 
+settling delay is applied, and the 16-bit raw temperature and humidity registers 
+are then read. Conversion follows the datasheet-specified formulae: temperature 
+is obtained as $T_{K} = \mathrm{raw} / 64$, then converted to Celsius by 
+subtracting 273.15; relative humidity is obtained as 
+$\%\mathrm{RH} = \mathrm{raw} / 512$.
+
+The OPT3001DNPR manager, implemented in \texttt{OPT3001DNPR\_manager.c}, drives 
+the Texas Instruments ambient light sensor on multiplexer channel~1. The sensor 
+is configured at initialisation by writing the word \texttt{0xC410} to its 
+\texttt{CONFIG} register, selecting continuous conversion mode, automatic 
+full-scale range, and an 800-millisecond conversion time. The 16-bit result 
+register encodes the measurement as a four-bit binary exponent and a twelve-bit 
+mantissa; the illuminance in lux is recovered by the expression 
+$E_{lux} = \mathrm{mantissa} \times 0.01 \times 2^{\mathrm{exponent}}$, 
+implemented in \texttt{OPT3001\_ConvertToLux()}.
+
+In all three managers, the I\textsuperscript{2}C multiplexer channel is selected 
+via \texttt{BSP\_I2C\_MUX\_SelectChannel()} at the start of each transaction and 
+disabled via \texttt{BSP\_I2C\_MUX\_DisableAll()} upon completion, preventing 
+bus contention between sensors sharing the same physical I\textsuperscript{2}C bus.
+
+\subsubsection{Modbus RTU Manager}
+
+The Modbus RTU stack is implemented in \texttt{Modbus\_Manager.c} and provides 
+both master and slave roles over the RS485 physical layer abstracted by 
+\texttt{BSP\_RS485}. The implementation is self-contained: it includes a 
+pre-computed 256-entry CRC-16/IBM look-up table split into high-byte 
+(\texttt{crc\_table\_hi[]}) and low-byte (\texttt{crc\_table\_lo[]}) arrays, 
+a frame builder (\texttt{Modbus\_BuildFrame()}), a transaction engine 
+(\texttt{Modbus\_Transaction()}), and a response validator 
+(\texttt{Modbus\_ValidateResponse()}).
+
+The slave role, which is active in the current platform configuration, operates 
+through interrupt-driven reception. After initialisation, 
+\texttt{BSP\_RS485\_ReceiveToIdle\_IT()} arms the UART receiver; when a UART 
+idle condition is detected, the registered callback \texttt{Modbus\_Slave\_RxEventCallback()} 
+sets the \texttt{frame\_ready} flag and records the received byte count in the 
+slave handle. The polling function \texttt{Modbus\_Slave\_Poll()}, called 
+periodically from the application scheduler, inspects this flag, validates the 
+CRC and slave address, and dispatches the frame to a dedicated handler according 
+to the function code. Eight function codes are supported: FC01, FC02, FC03, FC04, 
+FC05, FC06, FC15, and FC16. Frames addressed to other slaves are silently 
+discarded; frames with invalid CRC are dropped without response, as required by 
+the Modbus RTU specification. Following each handled frame, the receiver is 
+re-armed immediately to avoid missing subsequent requests.
+
+\subsubsection{CAN Manager}
+
+CAN frame reception is handled by \texttt{CAN\_manager.c}, which implements a 
+circular FIFO ring buffer of configurable depth (\texttt{CAN\_QUEUE\_SIZE}) to 
+decouple the interrupt-driven reception from the periodic application processing. 
+The \texttt{CAN1\_Sniff()} function polls the BSP receive interface and pushes 
+each arriving frame into the queue, advancing the head pointer with modular 
+arithmetic and overwriting the oldest entry if the buffer is full. The application 
+layer retrieves frames through \texttt{CAN1\_HasFrame()} and 
+\texttt{CAN1\_PopFrame()}, ensuring that burst traffic does not cause frame loss 
+under normal operating conditions.
+
+\subsubsection{EEPROM Manager}
+
+Non-volatile data persistence is managed by \texttt{EEPROM\_manager.c}, which 
+interfaces with the M95M01-RDW6TP serial EEPROM via the SPI BSP layer. The 
+manager exposes store and load primitives consumed by the Application layer to 
+persist the \texttt{DataFrame} structure across power cycles.
+
+\subsection{Filter Manager}
+
+Signal processing is an inherent requirement of any data acquisition platform 
+operating in an industrial environment, where sensor outputs are subject to 
+electrical noise, thermal drift, and measurement uncertainty. To address this 
+requirement, the IOBOX platform implements a generic, multi-type digital filter 
+library in \texttt{Filter\_Manager.c} and \texttt{Filter\_Manager.h}. The library 
+provides six distinct filter algorithms grouped into three categories — low-pass, 
+high-pass, and Kalman — all accessible through a unified polymorphic interface. 
+Every filter is encapsulated within a single \texttt{FilterInstance\_t} structure, 
+which carries a \texttt{FilterType\_t} type tag and a tagged union of 
+\texttt{LowPassFilter\_t}, \texttt{HighPassFilter\_t}, and \texttt{KalmanFilter\_t} 
+states. A single public entry point, \texttt{Filter\_Update()}, inspects the type 
+tag and dispatches execution to the appropriate internal handler, allowing the 
+calling module to apply any filter algorithm through an identical function 
+signature regardless of the underlying implementation.
+
+The architecture is entirely stack-based: no dynamic memory allocation is 
+performed anywhere in the library. The maximum SMA ring-buffer depth is bounded 
+at compile time by the constant \texttt{FILTER\_SMA\_MAX\_WINDOW~=~30}, explicitly 
+limiting stack usage to a predictable worst case, which is a critical property 
+for safety-conscious embedded deployments. The following subsections describe 
+each filter in detail.
+
+%------------------------------------------------------------------
+\subsubsection{Exponential Moving Average Low-Pass Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The Exponential Moving Average (EMA) is a first-order recursive low-pass filter 
+defined by the difference equation:
+
+\begin{equation}
+    y[n] = \alpha \cdot x[n] + (1 - \alpha) \cdot y[n-1]
+    \label{eq:ema}
+\end{equation}
+
+where $x[n]$ is the current raw input sample, $y[n]$ is the filtered output, 
+$y[n-1]$ is the previous filtered value, and $\alpha \in (0, 1]$ is the 
+smoothing factor. The equation is implemented verbatim in \texttt{EMA\_Update()} 
+within \texttt{Filter\_Manager.c}, where \texttt{prev\_output} holds $y[n-1]$ 
+and is updated in place at each call.
+
+\paragraph{Role in the Platform.}
+The EMA is the most computationally efficient filter in the library, requiring 
+only two multiplications, one addition, and one floating-point register per 
+instance. It is well suited to continuous sensor streams such as the temperature 
+and humidity readings produced by the HTS221TR and ENS210 sensors, where 
+high-frequency noise components must be attenuated without introducing significant 
+latency. Its recursive nature means that all past samples contribute to the 
+current output with exponentially decaying weights, making it a true infinite 
+impulse response (IIR) filter despite its minimal state.
+
+\paragraph{Initialisation and Parameters.}
+A filter instance is configured as an EMA low-pass by calling:
+
+\begin{verbatim}
+Filter_LowPass_EMA_Init(FilterInstance_t *filter, float alpha);
+\end{verbatim}
+
+This function sets \texttt{filter->type} to \texttt{FILTER\_TYPE\_LOWPASS}, 
+selects \texttt{LPF\_METHOD\_EMA}, stores the provided \texttt{alpha} value, and 
+initialises \texttt{prev\_output} to \texttt{0.0f}. The smoothing factor 
+$\alpha$ governs the trade-off between noise rejection and response speed: values 
+of $\alpha$ close to zero apply heavy smoothing at the cost of increased settling 
+time, while values close to one allow rapid tracking of signal changes with 
+minimal noise attenuation. The filter state can be cleared at any time without 
+altering the configured $\alpha$ by calling \texttt{Filter\_LowPass\_Reset()}.
+
+\paragraph{Advantages and Limitations.}
+The EMA demands constant time $O(1)$ computation and $O(1)$ memory regardless 
+of the degree of smoothing applied, making it particularly attractive on 
+memory-constrained microcontrollers. Its primary limitation is the absence of a 
+linear phase response: the group delay of an EMA is frequency-dependent, which 
+means that different frequency components of the signal experience different 
+delays. For slowly varying environmental measurements, this is not a practical 
+concern, but it becomes relevant if the filtered signal is used in a phase-sensitive 
+control loop.
+
+%------------------------------------------------------------------
+\subsubsection{Simple Moving Average Low-Pass Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The Simple Moving Average (SMA) computes the arithmetic mean of the $N$ most 
+recent samples:
+
+\begin{equation}
+    y[n] = \frac{1}{N} \sum_{k=0}^{N-1} x[n - k]
+    \label{eq:sma}
+\end{equation}
+
+where $N$ is the window size. The implementation in \texttt{SMA\_Update()} avoids 
+recomputing the full sum at every step by maintaining a running sum and a 
+fixed-size circular ring buffer of depth \texttt{window\_size}. When the buffer 
+is not yet full, the average is taken over the samples collected so far, 
+preventing an initial transient caused by zero-padding. Once the buffer is full, 
+each new sample replaces the oldest entry at position \texttt{write\_index}, the 
+running sum is updated as $\mathrm{sum} \mathrel{+}= x[n] - x_{\mathrm{old}}$, 
+and \texttt{write\_index} is advanced modulo \texttt{window\_size}. This 
+sliding-window approach reduces the per-step arithmetic to two additions and one 
+division, regardless of the window size.
+
+\paragraph{Role in the Platform.}
+The SMA provides a linear-phase low-pass response, meaning all frequency 
+components of the input are delayed by the same amount ($N-1)/2$ samples). This 
+property makes the SMA preferable to the EMA whenever phase consistency is 
+required, such as when two filtered channels are compared or when the filtered 
+output feeds a derivative-based computation. In the IOBOX context, the SMA is 
+applicable to slowly sampled sensor channels where a window of up to 30 samples 
+can be accumulated without introducing unacceptable latency at the 1000~ms 
+sampling period.
+
+\paragraph{Initialisation and Parameters.}
+The SMA instance is configured by calling:
+
+\begin{verbatim}
+Filter_LowPass_SMA_Init(FilterInstance_t *filter, uint8_t window_size);
+\end{verbatim}
+
+The \texttt{window\_size} parameter is clamped to the range $[1,\ 
+\texttt{FILTER\_SMA\_MAX\_WINDOW}]$ by the initialisation function. All fields 
+of the \texttt{sma} configuration sub-structure — \texttt{sample\_buffer[]}, 
+\texttt{write\_index}, \texttt{sample\_count}, and \texttt{sum} — are set to 
+zero during initialisation, ensuring a deterministic startup state.
+
+\paragraph{Advantages and Limitations.}
+The SMA's linear phase response and straightforward parametrisation make it 
+easy to reason about in a design context. Its stop-band attenuation is, however, 
+limited: the frequency response of an $N$-point SMA has nulls at integer 
+multiples of $f_s / N$, but exhibits relatively poor roll-off between those nulls. 
+Memory usage scales linearly with window size, with the \texttt{FILTER\_SMA\_MAX\_WINDOW} 
+constraint bounding the worst-case allocation to 30 floating-point values 
+(120 bytes) per instance.
+
+%------------------------------------------------------------------
+\subsubsection{First-Order IIR High-Pass Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The first-order IIR high-pass filter implemented in \texttt{HP\_IIR\_Update()} 
+is described by the transfer function:
+
+\begin{equation}
+    H(z) = \frac{1 - z^{-1}}{1 - \alpha z^{-1}}
+    \label{eq:hp_iir_z}
+\end{equation}
+
+which expands into the time-domain recursion:
+
+\begin{equation}
+    y[n] = \alpha \cdot \bigl(y[n-1] + x[n] - x[n-1]\bigr)
+    \label{eq:hp_iir}
+\end{equation}
+
+This formulation is implemented exactly as written in the source, with 
+\texttt{prev\_input} storing $x[n-1]$ and \texttt{prev\_output} storing $y[n-1]$, 
+both updated on every call. The parameter $\alpha$ determines the cutoff 
+frequency: as $\alpha \to 1$ the cutoff frequency decreases (more of the low 
+frequencies are suppressed), while as $\alpha \to 0$ the filter approaches a 
+pure differentiator.
+
+\paragraph{Role in the Platform.}
+The IIR high-pass filter is used to remove slow-varying drift and DC offsets from 
+sensor signals, isolating only the dynamic, event-driven components of a 
+measurement. In an industrial platform such as the IOBOX, thermal drift in 
+temperature sensors or baseline drift in light sensors can accumulate over long 
+periods and bias downstream processing. A high-pass filter with a low cutoff 
+frequency eliminates these components while preserving abrupt signal changes 
+caused by real physical events.
+
+\paragraph{Initialisation and Parameters.}
+The IIR high-pass filter is initialised by calling:
+
+\begin{verbatim}
+Filter_HighPass_IIR_Init(FilterInstance_t *filter, float alpha);
+\end{verbatim}
+
+Both \texttt{prev\_input} and \texttt{prev\_output} are set to \texttt{0.0f} 
+at initialisation. The reset function \texttt{Filter\_HighPass\_Reset()} clears 
+these two state variables without modifying the configured $\alpha$.
+
+\paragraph{Advantages and Limitations.}
+This filter requires only three state variables (\texttt{alpha}, 
+\texttt{prev\_input}, \texttt{prev\_output}), making it the most memory-efficient 
+of the three high-pass implementations. Its recursive nature introduces 
+frequency-dependent phase shift, which is acceptable for applications where only 
+the magnitude of signal changes is of interest. For a linear-phase alternative, 
+the SMA-subtraction method described below is available.
+
+%------------------------------------------------------------------
+\subsubsection{Simple Difference High-Pass Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The simplest possible discrete-time high-pass operation is the first-order 
+backward difference:
+
+\begin{equation}
+    y[n] = x[n] - x[n-1]
+    \label{eq:difference}
+\end{equation}
+
+implemented in \texttt{HP\_Difference\_Update()} by storing the previous input 
+in \texttt{prev\_input} and returning the subtraction result. There are no 
+tunable parameters beyond the initial state.
+
+\paragraph{Role in the Platform.}
+The difference filter acts as an approximation to differentiation in the 
+discrete-time domain. Its primary use case in the IOBOX context is step detection 
+and event detection on slowly varying sensor channels: a sudden change in 
+illuminance or temperature produces a large output spike, while a slowly drifting 
+baseline produces near-zero output. Because the filter requires no 
+configuration parameters, it is particularly convenient for rapid prototyping or 
+for situations where the signal statistics are not yet characterised.
+
+\paragraph{Initialisation and Parameters.}
+The filter is configured with no tunable parameters:
+
+\begin{verbatim}
+Filter_HighPass_Difference_Init(FilterInstance_t *filter);
+\end{verbatim}
+
+The single state variable \texttt{prev\_input} is initialised to \texttt{0.0f}, 
+which introduces a single-sample startup transient equal in magnitude to the 
+first input value. This behaviour is consistent with the zero-state assumption 
+applied uniformly across the library.
+
+\paragraph{Advantages and Limitations.}
+The difference filter is computationally trivial and parameter-free, but its 
+frequency response rises monotonically with frequency at 20~dB/decade, meaning 
+it amplifies high-frequency noise as strongly as it attenuates low-frequency 
+drift. In practice, its use is appropriate only for clean or pre-filtered signals 
+or for event-detection applications where noise spikes and step events can be 
+distinguished by magnitude.
+
+%------------------------------------------------------------------
+\subsubsection{SMA-Subtraction High-Pass Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The SMA-subtraction high-pass filter derives its output by subtracting the local 
+moving average from the current sample:
+
+\begin{equation}
+    y[n] = x[n] - \frac{1}{N}\sum_{k=0}^{N-1} x[n-k]
+    \label{eq:sma_sub}
+\end{equation}
+
+The moving average is maintained using the same efficient ring-buffer running-sum 
+technique as the SMA low-pass filter, implemented in \texttt{HP\_SMA\_SUB\_Update()}. 
+The method can be understood as the output of a complementary filter pair: if the 
+SMA low-pass output is $y_{LP}[n]$, then the SMA-subtraction high-pass output is 
+$x[n] - y_{LP}[n]$. This complementary relationship means that 
+$y_{LP}[n] + y_{HP}[n] = x[n]$ holds exactly, guaranteeing perfect signal 
+decomposition.
+
+\paragraph{Role in the Platform.}
+Unlike the IIR high-pass filter, the SMA-subtraction method inherits the linear 
+phase property of the underlying SMA, making it suitable for use cases where 
+phase consistency between the low-frequency and high-frequency components of a 
+decomposed signal is required. In the IOBOX platform, this filter can be applied 
+to separate the slowly evolving baseline of an ambient light reading from 
+transient illumination events, while ensuring that the detected transient is 
+time-aligned with the original sample stream.
+
+\paragraph{Initialisation and Parameters.}
+The filter is initialised by calling:
+
+\begin{verbatim}
+Filter_HighPass_SMA_Substract_Init(FilterInstance_t *filter,
+                                   uint8_t window_size);
+\end{verbatim}
+
+The \texttt{window\_size} parameter is subject to the same clamping as the SMA 
+low-pass: values outside $[1,\ \texttt{FILTER\_SMA\_MAX\_WINDOW}]$ are 
+corrected silently. All ring-buffer state is zeroed at initialisation. The reset 
+function \texttt{Filter\_HighPass\_Reset()} clears the buffer, sum, indices, and 
+sample count while preserving the configured window size.
+
+\paragraph{Advantages and Limitations.}
+The main advantage of this filter over the IIR high-pass is its linear phase 
+response and its intuitive parametrisation through a window length in samples. 
+Its limitation is identical to that of the SMA low-pass: memory scales linearly 
+with window size, and the stop-band rejection is limited by the SMA's moderate 
+roll-off characteristics.
+
+%------------------------------------------------------------------
+\subsubsection{1-State Position Kalman Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The one-state Kalman filter, implemented in \texttt{Kalman\_Position\_Update()}, 
+models the measured quantity as a constant subject to additive process noise. 
+The filter operates in two alternating steps at each sample instant.
+
+The prediction step propagates the error covariance $P$ forward in time by 
+adding the process noise variance $Q$:
+
+\begin{equation}
+    P_{\text{pred}} = P + Q
+    \label{eq:kalman1_predict}
+\end{equation}
+
+The update step computes the Kalman gain $K$, corrects the state estimate 
+$\hat{x}$ using the innovation (the difference between the new measurement $z$ 
+and the current estimate), and updates the covariance:
+
+\begin{equation}
+    K = \frac{P_{\text{pred}}}{P_{\text{pred}} + R}
+    \label{eq:kalman1_gain}
+\end{equation}
+
+\begin{equation}
+    \hat{x} = \hat{x} + K \cdot (z - \hat{x})
+    \label{eq:kalman1_state}
+\end{equation}
+
+\begin{equation}
+    P = (1 - K) \cdot P_{\text{pred}}
+    \label{eq:kalman1_cov}
+\end{equation}
+
+where $R$ is the measurement noise variance. These four equations are 
+implemented directly and sequentially in \texttt{Kalman\_Position\_Update()}, 
+with \texttt{error\_covariance}, \texttt{state\_estimate}, 
+\texttt{process\_variance}, and \texttt{measurement\_variance} stored in 
+the \texttt{position} sub-structure of \texttt{KalmanFilter\_t}.
+
+\paragraph{Role in the Platform.}
+The position Kalman filter provides optimal minimum-mean-square-error 
+state estimation for a scalar measurement corrupted by Gaussian noise, under 
+the assumption that the true quantity varies slowly compared to the measurement 
+noise. This makes it well suited to temperature and humidity estimation, where 
+physical conditions change slowly and sensor noise is approximately Gaussian. 
+Compared to the EMA, the position Kalman filter offers the advantage that its 
+effective smoothing coefficient $K$ adapts automatically over time: it starts 
+large (trusting new measurements heavily when initial uncertainty is high) and 
+converges toward a steady-state value as confidence in the estimate accumulates.
+
+\paragraph{Initialisation and Parameters.}
+The filter is initialised by calling:
+
+\begin{verbatim}
+Filter_Kalman_Position_Init(FilterInstance_t *filter,
+                            float process_var,
+                            float measurement_var,
+                            float init_state,
+                            float init_cov);
+\end{verbatim}
+
+The parameter \texttt{process\_var} represents $Q$, quantifying how much the 
+true physical quantity is expected to vary between samples. The parameter 
+\texttt{measurement\_var} represents $R$, quantifying the sensor noise power. 
+The ratio $Q/R$ governs the steady-state behaviour: a small $Q/R$ yields heavy 
+smoothing (the filter trusts its model more than new measurements), while a 
+large $Q/R$ produces fast tracking (the filter trusts new measurements more). 
+The initial state \texttt{init\_state} and initial covariance \texttt{init\_cov} 
+set the starting conditions. The state can be re-initialised without changing 
+$Q$ or $R$ via \texttt{Filter\_Kalman\_Position\_Reset()}.
+
+\paragraph{Advantages and Limitations.}
+The position Kalman filter is statistically optimal for linear systems with 
+Gaussian noise, and its adaptive gain behaviour eliminates the need for manual 
+tuning of a fixed smoothing coefficient. Its limitation is the constant-position 
+process model: if the measured quantity exhibits a trend or persistent 
+drift rather than random variation around a constant, the filter will lag behind 
+the true value, as the model does not account for a rate of change. The 
+two-state velocity model described below addresses this limitation.
+
+%------------------------------------------------------------------
+\subsubsection{2-State Constant-Velocity Kalman Filter}
+%------------------------------------------------------------------
+
+\paragraph{Mathematical Principle.}
+The two-state Kalman filter, implemented in \texttt{Kalman\_Velocity\_Update()}, 
+extends the position model by adding a velocity state, yielding the state vector 
+$\mathbf{x} = [\text{pos},\ \text{vel}]^{T}$. The process model assumes constant 
+velocity with additive noise, expressed by the state transition matrix 
+$\mathbf{F}$ and measurement matrix $\mathbf{H}$:
+
+\begin{equation}
+    \mathbf{F} = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}, \quad
+    \mathbf{H} = \begin{bmatrix} 1 & 0 \end{bmatrix}
+    \label{eq:kalman2_matrices}
+\end{equation}
+
+The full predict–update cycle is applied at each call. In the prediction step:
+
+\begin{equation}
+    \mathbf{x}_{\text{pred}} = \mathbf{F}\,\mathbf{x}, \quad
+    \mathbf{P}_{\text{pred}} = \mathbf{F}\,\mathbf{P}\,\mathbf{F}^{T} + \mathbf{Q}
+    \label{eq:kalman2_predict}
+\end{equation}
+
+In the update step, the Kalman gain vector $\mathbf{K}$, the state correction, 
+and the covariance update are:
+
+\begin{equation}
+    \mathbf{K} = \frac{\mathbf{P}_{\text{pred}}\,\mathbf{H}^{T}}
+                      {\mathbf{H}\,\mathbf{P}_{\text{pred}}\,\mathbf{H}^{T} + R}
+    \label{eq:kalman2_gain}
+\end{equation}
+
+\begin{equation}
+    \mathbf{x} = \mathbf{x}_{\text{pred}} + \mathbf{K}\,(z - \mathbf{H}\,\mathbf{x}_{\text{pred}})
+    \label{eq:kalman2_state}
+\end{equation}
+
+\begin{equation}
+    \mathbf{P} = (\mathbf{I} - \mathbf{K}\,\mathbf{H})\,\mathbf{P}_{\text{pred}}
+    \label{eq:kalman2_cov}
+\end{equation}
+
+The implementation expands all matrix operations analytically for the specific 
+$2 \times 2$ case, storing the symmetric covariance matrix in the four-element 
+array \texttt{covariance[4]} in row-major order. The symmetry condition 
+\texttt{covariance[1]~=~covariance[2]} is enforced explicitly after the 
+prediction step. The filter returns \texttt{state[0]}, the filtered position 
+estimate, as its output.
+
+\paragraph{Role in the Platform.}
+The constant-velocity Kalman filter is appropriate for signals that exhibit 
+consistent trends or ramps rather than stationary behaviour. In an industrial 
+monitoring context, this corresponds to physical processes such as a temperature 
+that rises steadily during equipment warm-up, or illuminance that increases 
+progressively at dawn. By explicitly modelling a velocity state, the filter 
+anticipates the trend in its prediction step and thus tracks the signal with 
+lower latency than a position-only filter under the same noise conditions.
+
+\paragraph{Initialisation and Parameters.}
+The filter is initialised by calling:
+
+\begin{verbatim}
+Filter_Kalman_Velocity_Init(FilterInstance_t *filter,
+                            float pos_process_noise,
+                            float vel_process_noise,
+                            float measurement_var,
+                            float init_pos, float init_vel,
+                            float init_cov_pos, float init_cov_vel);
+\end{verbatim}
+
+The process noise covariance matrix $\mathbf{Q}$ is initialised as a diagonal 
+matrix with \texttt{pos\_process\_noise} at position $Q_{00}$ and 
+\texttt{vel\_process\_noise} at $Q_{11}$, with off-diagonal terms set to 
+\texttt{0.0f}. The initial covariance matrix $\mathbf{P}$ is similarly 
+initialised as diagonal, reflecting the assumption of independent initial 
+uncertainties in position and velocity. The state vector is set to 
+$[\texttt{init\_pos},\ \texttt{init\_vel}]^{T}$. The filter state can be reset 
+to new initial conditions via \texttt{Filter\_Kalman\_Velocity\_Reset()}, which 
+accepts new initial position, velocity, and the two diagonal covariance terms 
+while preserving the process and measurement noise configuration.
+
+\paragraph{Advantages and Limitations.}
+The two-state model provides superior tracking performance for signals with 
+persistent trends compared to the constant-position model, at the cost of 
+doubling the state dimension and quadrupling the covariance matrix size. The 
+model assumes that the signal velocity itself changes only due to process noise, 
+which means the filter may exhibit transient overshoot when the velocity of the 
+underlying signal changes abruptly. The quality of the filter's performance is 
+strongly dependent on the accuracy of the process noise parameters: if 
+\texttt{vel\_process\_noise} is set too low, the filter will underestimate 
+velocity changes and lag behind abrupt transitions; if set too high, the 
+velocity estimate will track noise rather than trend.
+
+%------------------------------------------------------------------
+\subsubsection{Unified Filter Interface Summary}
+%------------------------------------------------------------------
+
+All six filter algorithms described above are accessed exclusively through the 
+function \texttt{Filter\_Update(FilterInstance\_t *filter, float input)}, which 
+inspects the \texttt{type} field of the \texttt{FilterInstance\_t} structure and 
+dispatches the call to the appropriate internal handler via a \texttt{switch} 
+statement. This design decouples the calling code from the filter implementation: 
+a module that processes a sensor channel can switch from an EMA to a Kalman 
+filter by changing only the initialisation call, without modifying the update 
+loop. The complete filter taxonomy is summarised in Table~\ref{tab:filter_summary}.
+
+\begin{table}[H]
+    \centering
+    \caption{Summary of filter algorithms implemented in \texttt{Filter\_Manager.c}}
+    \label{tab:filter_summary}
+    \begin{tabular}{|l|l|l|c|}
+        \hline
+        \textbf{Category} & \textbf{Method} & \textbf{Init Function} & \textbf{State Variables} \\
+        \hline
+        Low-pass  & EMA               & \texttt{Filter\_LowPass\_EMA\_Init}            & 2 \\
+        \hline
+        Low-pass  & SMA               & \texttt{Filter\_LowPass\_SMA\_Init}            & $N + 3$ \\
+        \hline
+        High-pass & IIR               & \texttt{Filter\_HighPass\_IIR\_Init}           & 3 \\
+        \hline
+        High-pass & Difference        & \texttt{Filter\_HighPass\_Difference\_Init}    & 1 \\
+        \hline
+        High-pass & SMA-Subtraction   & \texttt{Filter\_HighPass\_SMA\_Substract\_Init} & $N + 3$ \\
+        \hline
+        Kalman    & Position (1-state)& \texttt{Filter\_Kalman\_Position\_Init}        & 4 \\
+        \hline
+        Kalman    & Velocity (2-state)& \texttt{Filter\_Kalman\_Velocity\_Init}        & 10 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The Filter Manager thus provides the IOBOX platform with a complete, 
+self-contained signal processing toolkit that can be applied to any scalar 
+measurement channel. Its design prioritises predictable memory usage, zero dynamic 
+allocation, and a uniform calling interface, all of which are essential properties 
+for reliable embedded firmware.
+
+%------------------------------------------------------------------
+\subsection{Application Layer}
+%------------------------------------------------------------------
+
+The Application layer is the topmost layer of the firmware stack. It does not 
+interact with hardware directly but instead coordinates the Manager modules, 
+orchestrates data flow, and assembles the final output frame. It is composed of 
+four modules: the cooperative task scheduler, the Sensor Module, the Modbus 
+Module, and the Frame Builder.
+
+\subsubsection{Cooperative Task Scheduler}
+
+Rather than employing a real-time operating system, a lightweight cooperative 
+scheduler was implemented directly in \texttt{main.c}. The scheduler is based on 
+a statically allocated array of \texttt{TaskEntry} structures, each holding a 
+function pointer (\texttt{task\_fn}), a period in milliseconds 
+(\texttt{period\_ms}), and a timestamp of the last execution 
+(\texttt{last\_ms}). The dispatcher \texttt{Application\_RunTasks()} iterates 
+over the array on every pass of the main loop and invokes each task function 
+whenever the elapsed time since its last execution meets or exceeds its 
+configured period, using \texttt{HAL\_GetTick()} as the time reference.
+
+Six tasks are registered in the current configuration, as shown in 
+Table~\ref{tab:task_schedule}. All task functions are non-blocking by design: 
+they return immediately if no new data is available or if their internal period 
+has not elapsed, preventing any single task from starving the others.
+
+\begin{table}[H]
+    \centering
+    \caption{Registered tasks in the cooperative scheduler}
+    \label{tab:task_schedule}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        \textbf{Task Function} & \textbf{Period (ms)} & \textbf{Responsibility} \\
+        \hline
+        \texttt{SensorModule\_Task}  & 10   & Poll all enabled sensors \\
+        \hline
+        \texttt{CAN\_Manager\_Run}   & 10   & Drain CAN FIFO and update \texttt{sysboard.can} \\
+        \hline
+        \texttt{Modbus\_Module\_Poll} & 20  & Process incoming Modbus RTU frames \\
+        \hline
+        \texttt{EEPROM\_StoreFrame}  & 1000 & Persist current \texttt{SystemBoard} to EEPROM \\
+        \hline
+        \texttt{EEPROM\_LoadTask}    & 1000 & Reload last stored frame from EEPROM \\
+        \hline
+        \texttt{FrameBuilderTask}    & 1000 & Assemble and finalise the output \texttt{IoFrame} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Sensor Module}
+
+The Sensor Module, implemented in \texttt{Sensor\_module.c}, provides a unified 
+acquisition interface for all enabled sensors. It maintains one private 
+timestamp variable per sensor and, on each invocation of 
+\texttt{SensorModule\_Task()}, compares the current tick against each timestamp 
+to determine whether the sensor's configured sampling period has elapsed. When it 
+has, the corresponding manager acquisition function is called and the result is 
+written directly into the \texttt{sysboard} global structure. The per-sensor 
+sampling periods are defined centrally in \texttt{feature\_config.h}: 1000~ms 
+for the HTS221TR, 1000~ms for the ENS210, and 1000~ms for the OPT3001DNPR. 
+The module is fully driven by compile-time feature flags; sensors disabled at 
+configuration time introduce no runtime overhead.
+
+\subsubsection{Modbus Application Module}
+
+The Modbus Application Module, implemented in \texttt{Modbus\_module.c}, forms 
+the bridge between the Modbus RTU stack and the platform data model. It defines 
+a static \texttt{object\_map[]} table of \texttt{Modbus\_ObjectMap} entries, 
+each associating a Modbus register address and object type with a pointer to the 
+corresponding field in \texttt{sysboard} and an access permission flag. The 
+current register map exposes five read-only input registers: ENS210 humidity at 
+address~0, ENS210 temperature at address~1, HTS221TR humidity at address~2, 
+HTS221TR temperature at address~3, and OPT3001 illuminance at address~4. Floating-point 
+values are scaled by a factor of 100 before transmission, preserving two decimal 
+places within the 16-bit Modbus register format.
+
+Six callback functions (\texttt{ReadInput}, \texttt{ReadDiscrete}, 
+\texttt{ReadHolding}, \texttt{WriteHolding}, \texttt{ReadCoil}, 
+\texttt{WriteCoil}) are registered in the \texttt{Modbus\_SlaveTypeDef} handle 
+and invoked by the Modbus Manager dispatcher upon receipt of a valid request.
+
+\begin{table}[H]
+    \centering
+    \caption{Modbus input register map}
+    \label{tab:modbus_map}
+    \begin{tabular}{|c|l|l|c|}
+        \hline
+        \textbf{Address} & \textbf{Mapped Field} & \textbf{Physical Quantity} & \textbf{Scale} \\
+        \hline
+        0 & \texttt{sysboard.ens210\_hum}  & Relative humidity (\%) & $\times 100$ \\
+        \hline
+        1 & \texttt{sysboard.ens210\_temp} & Temperature (°C)       & $\times 100$ \\
+        \hline
+        2 & \texttt{sysboard.hts221\_hum}  & Relative humidity (\%) & $\times 100$ \\
+        \hline
+        3 & \texttt{sysboard.hts221\_temp} & Temperature (°C)       & $\times 100$ \\
+        \hline
+        4 & \texttt{sysboard.opt3001\_lux} & Illuminance (lux)      & $\times 100$ \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Frame Builder}
+
+The Frame Builder, implemented in \texttt{frame.c}, is responsible for assembling 
+the final output structure that the IOBOX platform transmits to external systems. 
+Rather than forwarding raw sensor readings directly, the platform encapsulates all 
+acquired data within a structured binary frame, the \texttt{IoFrame}, whose layout 
+is illustrated in Figure~\ref{fig:ioframe_structure}. This design ensures that any 
+receiving system can unambiguously identify, validate, and decode the payload 
+regardless of which sensors or modules are active in a given deployment.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/ioframe_structure.png}
+    \caption{Structure of the IOBOX output frame (\texttt{IoFrame})}
+    \label{fig:ioframe_structure}
+\end{figure}
+
+The \texttt{BuildFinalFrame()} function populates each field of the 
+\texttt{IoFrame} structure from the \texttt{DataFrame} provided by the EEPROM 
+load task, then computes and appends a CRC checksum over all preceding fields. 
+The complete frame format is described in detail below.
+
+\paragraph{Start Byte.}
+The first field of the frame is a fixed synchronisation byte set to the constant 
+value \texttt{0xAA}. Its purpose is to signal the beginning of a valid frame to 
+any receiving device scanning an incoming byte stream. By defining a distinctive 
+and consistent delimiter, the receiver can establish frame boundaries without 
+relying on inter-frame timing gaps, which are difficult to guarantee reliably in 
+shared or noisy industrial buses. The value \texttt{0xAA} (binary 
+\texttt{10101010}) was selected for its alternating bit pattern, which is easily 
+detectable even in the presence of bit-level noise.
+
+\paragraph{Device Type.}
+The Device Type field identifies the category of the transmitting device. In the 
+current platform, this field is set to the compile-time constant 
+\texttt{DEVICE\_TYPE} defined in \texttt{frame.h}. Its presence allows a network 
+to host multiple types of embedded nodes simultaneously: a receiving gateway can 
+inspect this field and apply the appropriate decoding logic without prior 
+knowledge of the sender's identity. For the IOBOX platform, this field 
+unambiguously indicates that the frame originates from an industrial IO 
+acquisition node rather than any other device type on the network.
+
+\paragraph{IOBOX ID.}
+The IOBOX ID field carries the unique numeric identifier of the specific IOBOX 
+unit that generated the frame, populated from the compile-time constant 
+\texttt{IOBOX\_ID}. This field is essential in multi-node deployments where 
+several IOBOX units share a common communication channel. Without a per-unit 
+identifier, a receiving system would be unable to associate incoming frames with 
+their physical origin, making it impossible to distinguish measurements from 
+different field locations. By embedding the identifier directly in each frame, 
+the architecture remains stateless at the receiver side: no session or connection 
+establishment is required to route incoming data correctly.
+
+\paragraph{Mask ID.}
+The Mask ID is a configuration bitmap that describes which sensors and 
+communication modules are active and contributing data to the current frame. Each 
+bit of this field corresponds to one module, as detailed in 
+Table~\ref{tab:mask_id}. A bit set to logic one indicates that the associated 
+module is enabled and that its data is present in the payload; a bit set to logic 
+zero indicates that the module is disabled and that its data is absent from the 
+frame.
+
+\begin{table}[H]
+    \centering
+    \caption{Mask ID bit field definitions}
+    \label{tab:mask_id}
+    \begin{tabular}{|c|l|c|}
+        \hline
+        \textbf{Bit} & \textbf{Module} & \textbf{Logic 1 meaning} \\
+        \hline
+        5 & CAN sniffer            & CAN data present in payload \\
+        \hline
+        4 & HTS221TR Temperature   & HTS221 temperature present \\
+        \hline
+        3 & HTS221TR Humidity      & HTS221 humidity present \\
+        \hline
+        2 & ENS210 Temperature     & ENS210 temperature present \\
+        \hline
+        1 & ENS210 Humidity        & ENS210 humidity present \\
+        \hline
+        0 & OPT3001DNPR Illuminance & OPT3001 lux value present \\
+        \hline
+    \end{tabular}
+\end{table}
+
+As an illustrative example, a Mask ID value of \texttt{0b100110} indicates that 
+the CAN sniffer, ENS210 temperature, and ENS210 humidity modules are active, 
+while the HTS221TR and OPT3001DNPR channels are disabled. The receiver reads 
+this field before parsing the Data field, and uses the active bits to determine 
+the exact byte layout of the payload. This mechanism provides the frame with 
+both flexibility and forward compatibility: new modules can be introduced by 
+assigning previously unused bits to them, without altering the structure of 
+frames generated by existing firmware versions that leave those bits at zero.
+
+\paragraph{Length.}
+The Length field specifies the total size of the Data field in bytes. Its role 
+is to provide the receiver with an explicit boundary for the payload, 
+independently of the Mask ID. Without this field, a receiver would be required 
+to re-derive the payload length from the Mask ID by summing the sizes of all 
+active modules, which introduces coupling between the parser and the bit 
+definitions. By encoding the length directly, the frame becomes self-describing: 
+a receiver can locate the CRC field and the End Byte at a fixed offset from the 
+start of the Data field, even if the set of supported modules differs between 
+firmware versions.
+
+\paragraph{Data.}
+The Data field contains the actual measurement values and communication data 
+collected by the platform during the current acquisition cycle. Its contents are 
+determined entirely by the active bits in the Mask ID field. In the current 
+platform configuration, with all three sensors and the CAN sniffer enabled, the 
+Data field contains: the ENS210 temperature, the ENS210 relative humidity, the 
+HTS221TR temperature, the HTS221TR relative humidity, the OPT3001DNPR illuminance 
+in lux, and the CAN frame payload comprising the message identifier, the RTR 
+flag, the data length code, and up to eight data bytes. All floating-point sensor 
+values are stored as \texttt{float} fields within the \texttt{IoFrame} structure, 
+preserving full measurement precision within the frame. The architecture is 
+explicitly designed to accommodate future modules: additional sensor types or 
+communication interfaces can be incorporated by assigning new Mask ID bits and 
+appending the corresponding data fields to the payload definition, without 
+disrupting the parsing of frames that do not set those bits.
+
+\paragraph{CRC.}
+The CRC field contains a 16-bit Cyclic Redundancy Check computed over all 
+preceding bytes of the frame, from the Start Byte through the last byte of the 
+Data field. The algorithm implemented in \texttt{calc\_crc16()} uses the 
+CRC-16/IBM polynomial \texttt{0xA001} with an initial value of \texttt{0xFFFF}, 
+applied bit-by-bit without a look-up table. The checksum is appended as the 
+second-to-last field of the structure, immediately before the End Byte, and 
+covers exactly \texttt{sizeof(IoFrame) - sizeof(finalFrame.crc)} bytes as 
+expressed in the implementation. This placement allows the receiver to verify 
+frame integrity before consuming any measurement data. A CRC mismatch at the 
+receiver indicates either a transmission error or a corrupted EEPROM frame, and 
+the frame must be discarded. The use of CRC-16 over a simple checksum was 
+motivated by its superior error detection capability, particularly its ability 
+to detect all single-bit errors, all double-bit errors, and all burst errors 
+shorter than 16 bits.
+
+\paragraph{End Byte.}
+The frame is terminated by a fixed End Byte set to the constant value 
+\texttt{0x55}. Together with the Start Byte \texttt{0xAA}, this field 
+constitutes a second layer of frame boundary validation: a receiver that has 
+successfully located a Start Byte, parsed the declared Length, and verified the 
+CRC can use the End Byte as a final consistency check. A missing or incorrect 
+End Byte at the expected position indicates a framing error, for example caused 
+by a length field corruption that displaced the parser's position within the 
+stream. The combination of \texttt{0xAA} at the start and \texttt{0x55} at 
+the end is also visually symmetric (binary \texttt{10101010} and 
+\texttt{01010101}), which simplifies manual inspection during debugging.
+
+The complete field layout of the \texttt{IoFrame} structure is summarised in 
+Table~\ref{tab:ioframe_fields}.
+
+\begin{table}[H]
+    \centering
+    \caption{IoFrame field summary}
+    \label{tab:ioframe_fields}
+    \begin{tabular}{|l|l|p{6.5cm}|}
+        \hline
+        \textbf{Field} & \textbf{Value / Type} & \textbf{Description} \\
+        \hline
+        Start Byte    & \texttt{0xAA} (\texttt{uint8\_t})  & Frame synchronisation delimiter \\
+        \hline
+        Device Type   & \texttt{DEVICE\_TYPE} (\texttt{uint8\_t}) & Node category identifier \\
+        \hline
+        IOBOX ID      & \texttt{IOBOX\_ID} (\texttt{uint8\_t})    & Per-unit unique identifier \\
+        \hline
+        Mask ID       & \texttt{BUILD\_MASK\_ID} (\texttt{uint8\_t}) & Active module bitmap \\
+        \hline
+        Length        & Payload size (\texttt{uint16\_t})  & Data field length in bytes \\
+        \hline
+        Data          & Sensor + CAN values (\texttt{float}, \texttt{uint8\_t[]}) & Active measurement payload \\
+        \hline
+        CRC           & CRC-16/IBM (\texttt{uint16\_t})    & Integrity check over all preceding fields \\
+        \hline
+        End Byte      & \texttt{0x55} (\texttt{uint8\_t})  & Frame termination delimiter \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The \texttt{FrameBuilderTask()} function retrieves the last EEPROM-loaded 
+\texttt{DataFrame} via \texttt{EEPROM\_GetLastLoaded()} and delegates assembly 
+to \texttt{BuildFinalFrame()}, which fills every field sequentially before 
+computing and inserting the CRC. This design ensures that the output frame 
+always reflects the most recently persisted system state, providing continuity 
+across power cycles and making the frame contents auditable through the 
+non-volatile storage layer.
+
+\subsubsection{System Data Flow}
+
+% --- Figure: data flow diagram ---
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.85\textwidth]{Figures/data_flow.png}
+    \caption{End-to-end data flow across the three firmware layers}
+    \label{fig:data_flow}
+\end{figure}
+
+The complete data path through the system can be summarised as follows. Physical 
+sensor measurements are acquired by the Sensor Module and written into 
+\texttt{sysboard}. Simultaneously, CAN frames captured by the CAN Manager are 
+stored in the same structure. At every 1000~ms interval, the EEPROM Store task 
+serialises \texttt{sysboard} into a \texttt{DataFrame} and writes it to 
+non-volatile memory; the EEPROM Load task immediately retrieves the last valid 
+frame. Finally, the Frame Builder consumes the loaded \texttt{DataFrame} and 
+produces the \texttt{IoFrame} output, ready for transmission. Throughout this 
+pipeline, any Modbus master connected via RS485 may read live sensor values 
+directly from \texttt{sysboard} through the Modbus Application Module at any 
+point in the cycle.
+
+\section*{} % transition placeholder — Conclusion follows
+The software architecture described in this section provides a clean separation 
+of concerns, compile-time configurability, and a deterministic execution model 
+without the overhead of a real-time operating system. The following section 
+presents the validation results obtained on the target hardware.
 
 \section{Conclusion}
