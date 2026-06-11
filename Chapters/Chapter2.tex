@@ -9,28 +9,27 @@
 \cfoot{\thepage}
 
 \section{Introduction}
-This chapter presents the technical environment and the main components used in the development of the IO-Box platform. It introduces the hardware and software resources that form the basis of the system, including the STM32G474 microcontroller, external peripherals, sensors, development tools, and communication protocols.
+This chapter talks about the technical setup and the main parts used to build the IO-Box platform. It covers the hardware and software that make up the system, like the STM32G474 microcontroller,  external peripherals, sensors, tools for development, and communication protocols.
 
-The chapter also describes the principal STM32 peripherals employed within the project, such as Analog-to-Digital Converters (ADC), Digital-to-Analog Converters (DAC), timers, and Pulse Width Modulation (PWM) modules. Understanding these technologies is essential for comprehending the design and implementation choices that will be detailed in the following chapters.
+The chapter also explains the main STM32 parts used in the project, such as Analog-to-Digital Converters (ADC), Digital-to-Analog Converters (DAC), timers, and Pulse Width Modulation (PWM) features.
+Knowing about these technologies is important for understanding the design and how things work, which will be explained in the next chapters.
+
 
 \section{General Concept of the IO-Box Platform}
-The IO-Box is a configurable industrial Input/Output platform designed to facilitate the integration of sensors, actuators, and industrial communication interfaces within IoT and automation systems.
+The IO-Box is a customizable industrial Input/Output system that helps connect sensors, actuators, and communication tools in IoT and automation setups.
 
-The platform acts as an intermediary between field devices and supervisory systems by acquiring data from sensors, processing the collected information, controlling external devices, and exchanging information through various communication protocols.
+It works as a bridge between field devices and control systems by gathering data from sensors, handling that data, managing external equipment, and sharing information using different communication protocols.
 
-Its modular architecture allows different hardware modules and software functionalities to be integrated according to application requirements. This flexibility makes the IO-Box suitable for a wide range of industrial monitoring, automation, and data acquisition applications.
 
-The platform combines high-performance embedded processing, multiple communication interfaces, analog and digital signal acquisition capabilities, and non-volatile storage mechanisms in a single integrated solution.
+The system is built with a modular design, meaning it can include various hardware parts and software features based on what's needed for each project.
+This adaptability makes it useful for many industrial tasks like monitoring, automating, and collecting data.
 
+All these features—like strong embedded processing, multiple communication options, the ability to read both analog and digital signals, and reliable storage—are combined into one easy-to-use device.
 %__Part 2 of Chapter 2: General concept and system components
 \section{Hardware components}
 
 \subsection{STM32G474MBTx Microcontroller}
-At the heart of the IO‑Box hardware architecture lies the STM32G474 microcontroller,
-a high‑performance device from STMicroelectronics. It is based on the ARM Cortex‑M4
-core with floating‑point unit (FPU), making it particularly well‑suited for real‑time signal
-processing and control applications.
-
+At the center of the IO-Box hardware design is the STM32G474 microcontroller, a powerful chip made by STMicroelectronics. It uses the ARM Cortex-M4 processor with a floating-point unit, which makes it very good option for handling real-time signal processing and control tasks.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.55\textwidth]{Figures/nucleo-g474re.png}
@@ -38,7 +37,7 @@ processing and control applications.
     \label{fig:stm32_chip}
 \end{figure}
 
-The STM32G474 was preferred over the STM32F4 series due to its higher ADC count (five independent ADC units versus two on the F4), its native FDCAN peripheral, and its more modern HAL ecosystem. Compared to the STM32L4 series, the G474 offers higher clock speed (170 MHz versus 80 MHz) and a richer analog front end, which are necessary for real-time signal processing at the required sampling rates.
+The STM32G474 was chosen instead of the STM32F4 series because it has more ADC units (five compared to two on the F4), includes a built-in FDCAN feature, and uses a newer HAL environment. When compared to the STM32L4 series, the G474 has a faster clock speed (170 MHz versus 80 MHz) and a better analog front end, which are important for handling real-time signal processing at the needed sampling rates.
 
 \begin{table}[H]
     \centering
@@ -81,16 +80,14 @@ The STM32G474 was preferred over the STM32F4 series due to its higher ADC count 
     \end{tabular}
 \end{table}
 
-Within the IO‑Box, the STM32G474 acts as the central processing unit, coordinating
-signal acquisition, local data processing, and actuator control. It also supervises
-communication with external systems through multiple industrial protocols, making it a
-key enabler of the project’s objectives.
+Inside the IO-Box, the STM32G474 serves as the main processor. It handles tasks like collecting signals, processing data locally, and controlling actuators. Additionally, it manages communication with other systems using various industrial protocols, which is essential for achieving the project's goals.
 
 \subsection{EEPROM Memory: M95M01-RDW6TP}
 
-To complement the STM32 microcontroller and ensure reliable data storage, the IO‑Box integrates an external EEPROM memory, specifically the M95M01‑RDW6TP from STMicroelectronics. This device provides non‑volatile storage for configuration parameters, calibration data, and system logs, allowing the platform to retain critical information even after power cycles.
+To manage the work with the STM32 microcontroller and make sure data is stored reliably, the IO-Box uses an external EEPROM memory called the M95M01-RDW6TP from STMicroelectronics. This device stores important information like settings, calibration data, and system logs, so the system can keep this data even when the power is turned off.
 
-The M95M01‑RDW6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. It features a fast access time of 25 ns and communicates via the SPI bus, ensuring efficient integration with the STM32G474. Packaged in an 8‑pin SOIC format, it offers a compact solution suitable for embedded applications. Its endurance of up to one million write cycles and data retention of 40 years make it a robust choice for industrial environments where reliability is essential.
+The M95M01-RDW6TP is a 1-Mbit serial EEPROM that is organized into 131,072 memory locations, each holding 8 bits.
+It has a fast response time of 25 nanoseconds and connects through the SPI bus, which makes it easy to use with the STM32G474. It comes in an 8-pin SOIC package, making it a small and efficient option for embedded systems. It can handle up to one million write operations and keeps data safely for up to 40 years, making it a dependable choice for industrial uses where reliability is key.
 
 \begin{table}[H]
     \centering
@@ -130,11 +127,11 @@ The M95M01‑RDW6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. 
 
 \subsection{Sensors}
 
-In the IOBox project, several sensors were integrated to enable environmental and physical measurements. Our work focused not only on interfacing these sensors with the STM32G474 microcontroller, but also on configuring their registers, managing communication protocols, and performing calibration to ensure accurate data acquisition. Each sensor was studied in detail, and its characteristics were documented to highlight its role within the system.
+In the IOBox project, we added several sensors to measure different environmental and physical conditions. Our main task was to connect these sensors to the STM32G474 microcontroller, set up their settings, handle how they communicate, and do some testing to make sure the data they collect is correct. We looked closely at each sensor, learned about how they work, and wrote down their features to show how each one contributes to the whole system.
 
 \subsubsection{ENS210 Sensor}
 
-The ENS210 is a digital sensor from ScioSense that integrates both temperature and humidity measurement in a compact package. It communicates via an I\textsuperscript{2}C interface, making it easy to integrate with microcontrollers such as the STM32G474. Its high accuracy and low power consumption make it suitable for environmental monitoring in embedded systems.
+The ENS210 is a digital sensor made by ScioSense that measures both temperature and humidity in a small size. It uses an I\textsuperscript{2}C interface to connect easily with microcontrollers like the STM32G474. The sensor is known for being accurate and using very little power, which makes it a good choice for use in systems that monitor the environment.
 
 \begin{table}[H]
     \centering
@@ -174,10 +171,10 @@ The ENS210 is a digital sensor from ScioSense that integrates both temperature a
 
 \subsubsection{OPT3001DNPR Sensor}
 
-The OPT3001DNPR is a digital ambient light sensor from Texas Instruments. It is designed to measure the intensity of visible light and provide results in lux units, making it ideal for applications such as automatic brightness control, display backlight adjustment, and environmental monitoring. The sensor communicates via the I\textsuperscript{2}C protocol and features built‑in calibration and linear response across a wide dynamic range.
+The OPT3001DNPR is a digital light sensor made by Texas Instruments. It measures how bright the light is and shows the results in units called lux. This makes it great for uses like automatically adjusting screen brightness, controlling display backlights, and monitoring the environment. The sensor uses the I\textsuperscript{2}C communication method and has built-in calibration and a linear response over a wide range of light levels.
 
-In the IO‑Box project, the OPT3001DNPR was integrated to provide accurate light measurements. Work was carried out on its internal registers to configure measurement modes, thresholds, and calibration routines, ensuring reliable data acquisition for real‑time applications.
-
+In the IO-Box project, the OPT3001DNPR was used to get precise light readings.
+Work was done on its internal settings to set up different measurement modes, set thresholds, and run calibration processes, ensuring the sensor gave dependable data for real-time use.
 \begin{table}[H]
     \centering
     \caption{Key Characteristics of OPT3001DNPR Sensor}
