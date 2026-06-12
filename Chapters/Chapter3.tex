@@ -9,25 +9,25 @@
 \cfoot{\thepage}
 
 \section{Introduction}
-The preceding chapters established the project context, defined the platform requirements, 
-and presented the hardware components and communication protocols that form the technical 
-foundation of the IOBOX platform. This chapter details the design decisions and practical 
-implementation work carried out to bring that foundation into a functional embedded system.
 
-The implementation is organized around a layered software architecture that separates 
-hardware-specific code from higher-level application logic. At the lowest level, a Board 
-Support Package (BSP) provides direct peripheral drivers for every hardware interface 
-present on the platform. Above it, a Manager layer encapsulates the communication 
-protocols and sensor drivers, exposing clean, hardware-independent APIs to the rest of 
-the system. At the top, the Application layer coordinates all modules through a 
-lightweight cooperative task scheduler and assembles sensor data into structured 
-output frames.
+The last chapters established the project context and extracting the platform requirements then we 
+present the hardware components and communication protocols that form the technical 
+core of the IOBOX platform. This chapter explains the design decisions and practical 
+implementation work transforming that foundation into a functional embedded system.
+
+The implementation is based around a  software architecture that separates 
+hardware code from higher level application code . the foundation was the Board 
+Support Package (BSP) which provide a peripheral drivers for every hardware interface 
+mentionned on the platform. after that we worked on a Manager layer  contains the communication 
+protocols and sensor drivers delivering a clean hardware independent APIs to the rest of 
+the system . the head of our architecture is the Application layer which coordinates all modules through a 
+ task scheduler and assembles sensor data into structured frames.
 
 The chapter begins by describing the hardware architecture of the IOBOX platform, 
-followed by a detailed account of the software architecture and its constituent layers. 
-Each subsection covers the design rationale, the implementation approach, and the key 
+followed  by the software architecture and its constituent layers. 
+Each subsection covers the design logic and the implementation approach and the  
 technical choices made during development. The chapter concludes with a summary of the 
-results obtained and a discussion of the platform's readiness for industrial deployment.
+results obtained and a discussion of the platform's flexibility for industrial deployment.
 \section{Hardware architecture}
 
 
@@ -811,5 +811,203 @@ The software architecture described in this section provides a clean separation
 of concerns, compile-time configurability, and a deterministic execution model 
 without the overhead of a real-time operating system. The following section 
 presents the validation results obtained on the target hardware.
+
+\section{System Validation and Functional Testing}
+
+Each hardware interface was tested separately before any integration work began. 
+The goal was simple: make sure every peripheral actually works before building 
+anything on top of it. Tests were run directly on the STM32G474MBTx target board 
+using STM32CubeIDE, with results printed through the SWO debug terminal to ensure a visual validation for evrey test .
+
+\subsection{ADC Validation}
+
+ADC channels were sampled in a single scan sequence to check that the 
+conversion phase was set up correctly. The results were printed to the 
+terminal as shown in Figure~\ref{fig:adc_test}.
+
+Channel 0 read zero, which was expected that pin was left unconnected. Every 
+other channel returned a value somewhere in the 0–4095 range as expected .The scan ran without errors and the results looked 
+physically reasonable, so the ADC driver was considered validated at that point.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{Figures/adc_test.png}
+    \caption{ADC raw output across 19 channels}
+    \label{fig:adc_test}
+\end{figure}
+
+\subsection{SPI Communication Test}
+
+The SPI driver was tested by reading data from an esp32 SPI peripheral and 
+printing each received byte to the IAR SWO debug terminal. Seven consecutive receive 
+frames were captured each containing eight bytes as being sent from the esp32 (Figure~\ref{fig:spi_test}).
+Clock polarity, phase, and bit order were all set and the received data matched the 
+expected response format.That was enough to confirm the SPI bus was working.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Figures/spi_test.png}
+    \caption{SPI receive frames captured on the debug terminal}
+    \label{fig:spi_test}
+\end{figure}
+
+\subsection{CAN Standard Identifier Test}
+
+A CAN GPS module was connected to the board with a CAN transceiver and a 120 ohm resistor and configured to send frames 
+with standard 11 bit identifiers at a fixed rate. The firmware was succeeded to print 
+each received frame payload to the terminal. 
+
+Figure~\ref{fig:can_std_test} shows the captured output. Three payload patterns 
+cycled in a fixed sequence throughout the test as shown in the figure bellow so The 
+part of the payload \texttt{DE AD BE EF} stays identical across all of them which confirms 
+the payload was not getting corrupted on reception. The frame cycle matches 
+exactly what was sent from the CAN GPS module side meaning our CAN module works perfectly.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Figures/can_std_test.png}
+    \caption{CAN frames received with standard 11-bit identifiers}
+    \label{fig:can_std_test}
+\end{figure}
+
+\subsection{CAN Extended Identifier Test}
+
+The same test was repeated using 29-bit extended identifiers to make sure the 
+CAN filter was configured to accept that frame format as well.
+
+in the test we configured the module to show evrey part of the frame not just the payload part and all received frames show the identifier \texttt{0x1752286} with 
+\texttt{DLC=8}, as seen in Figure~\ref{fig:can_ext_test}. The first two bytes of 
+the payload increment across frames — \texttt{C6 14}, \texttt{C7 14}, 
+\texttt{E5 14} which matches the counter field being incremented as we expect from the sender  
+. The last four bytes stay fixed at \texttt{DE AD BE EF} 
+as before confirming no corruption. The firmware printed the full 29-bit ID 
+correctlyso the extended frame mode was working as 
+expected.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Figures/can_ext_test.png}
+    \caption{CAN frames received with extended 29-bit identifiers}
+    \label{fig:can_ext_test}
+\end{figure}
+
+\subsection{ENS210 Humidity Validation}
+
+The ENS210 was tested by running the acquisition routine in a loop and watching 
+the humidity output on the terminal. The sensor sits on I\textsuperscript{2}C 
+multiplexer channel 2.
+
+The first value printed was 0.00\,\%RH, which happened because the 
+reading was taken before the sensor finished its first measurement cycle .
+the sensor was configured in single-shot mode. After that readings settled between 
+53.29 and 53.39\ \%RH  which is a reasonable indoor humidity level 
+for the conditions during testing. A wet paper was then held close to the sensor 
+and the readings climbed to 83.59\  \%RH before dropping back down 
+once it was removed. Figure~\ref{fig:ens210_test} shows the full result. The 
+sensor responded to the change the multiplexer channel selection worked and 
+the conversion gave physically corrected numbers.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/ens210_test.png}
+    \caption{ENS210 humidity readings during ambient and induced humidity test}
+    \label{fig:ens210_test}
+\end{figure}
+\subsection{ENS210 Temperature Validation}
+
+The temperature output of the ENS210 was verified alongside the humidity test, 
+using the same acquisition loop on multiplexer channel 2.
+
+The first reading came back as -45.00 degreeCelsius, which is the value 
+the conversion formula produces when the sensor has not yet completed its first 
+measurement the raw register still holds its reset state at that point. From 
+the second reading the output stabilised, cycling between 
+ 38.6 degreeCelsius and 39.96 degreeCelsius as shown in 
+Figure~\ref{fig:ens210_temp_test}. That range is slightly above typical room 
+temperature because the sensor sits close to active 
+components on the board and picks up some of the heat they dissipate.
+ which confirms that the sensor is running correctly and that the 
+temperature conversion is being applied successfully .
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Figures/ens210_temp_test.png}
+    \caption{ENS210 temperature readings showing stabilisation after sensor warm-up}
+    \label{fig:ens210_temp_test}
+\end{figure}
+
+\subsection{OPT3001 Sensor Validation}
+
+The OPT3001DNPR was tested by running acquisitions while changing the light 
+level above the sensor and checking that the lux output responds to the changes 
+correctly.
+
+Figure~\ref{fig:opt3001_test} shows the raw register values alongside the 
+computed lux results after conversion . Lux readings ranged from 63 to 493 during the test, which 
+corresponds to the actual lighting level in the room  lower values when a 
+finger was placed over the sensor  higher values when a lamp was brought closer. 
+which validates our work with the adressing , the conversion and the good calibration . 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{Figures/opt3001_test.png}
+    \caption{OPT3001 raw register values and computed lux output}
+    \label{fig:opt3001_test}
+\end{figure}
+
+\subsection{HTS221TR Sensor Validation}
+
+The objective of this test was to confirm that the HTS221TR driver was 
+correctly acquiring temperature and humidity data and exposing it through 
+the communication interface.
+
+Figure~\ref{fig:hts221_test} shows the captured data with no missing response or errors appears 
+across the entire captured sequence, confirming that the sensor data was 
+being read and transmitted correctly.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{Figures/hts221_test.png}
+    \caption{Communication traffic log during HTS221TR sensor validation}
+    \label{fig:hts221_test}
+\end{figure}
+
+\subsection{RS485 Communication Test  PC Side}
+
+The RS485 link was tested  by connecting the test board to a PC 
+running the  serial terminal over COM6 at 115200 bps. The STM32 
+transmitted sensor data periodically over the RS485 bus and the PC terminal 
+was used to verify reception.
+
+Figure~\ref{fig:rs485_pc_test} shows the output on the PC side. After the 
+USART3 initialisation message and the RS485 node initialisation confirmation, 
+the board started transmitting temperature and humidity readings. The PC received 
+temperature and humidity values  
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Figures/rs485_pc_test.png}
+    \caption{RS485 reception output on the PC terminal (Termite 3.4)}
+    \label{fig:rs485_pc_test}
+\end{figure}
+
+\subsection{RS485 Communication Test — STM32 Side}
+
+The same RS485 test was done  from the STM32 side using the 
+STM32CubeIDE debug terminal, to confirm that the microcontroller was correctly 
+handling both the transmission and the reception .
+
+Figure~\ref{fig:rs485_stm32_test} shows the STM32-side output. The sequence 
+starts with the same initialisation messages then logs each transmitted 
+temperature and humidity values . 
+meaning transmit and receive mode was working correctly. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Figures/rs485_stm32_test.png}
+    \caption{RS485 transmission log on the STM32 debug terminal}
+    \label{fig:rs485_stm32_test}
+\end{figure}
+
 
 \section{Conclusion}
