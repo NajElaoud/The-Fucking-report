@@ -551,41 +551,8 @@ accurately.
 %------------------------------------------------------------------
 
 The Filter Manager provides the IOBOX firmware with a complete, self-contained 
-signal processing toolkit whose design is driven by three embedded-systems 
-constraints: zero dynamic memory allocation, constant-time dispatch, and a 
-uniform calling interface. Table~\ref{tab:filter_summary} summarises the 
-computational and memory characteristics of each filter.
-
-\begin{table}[H]
-    \centering
-    \caption{Computational and memory characteristics of the Filter Manager algorithms}
-    \label{tab:filter_summary}
-    \begin{tabular}{|l|l|c|c|}
-        \hline
-        \textbf{Category} & \textbf{Method} & \textbf{State Variables} & \textbf{Ops per Update} \\
-        \hline
-        Low-pass  & EMA                  & 2          & 3 \\
-        \hline
-        Low-pass  & SMA                  & $N + 3$    & 4 \\
-        \hline
-        High-pass & IIR                  & 3          & 4 \\
-        \hline
-        High-pass & Difference           & 1          & 1 \\
-        \hline
-        High-pass & SMA-Subtraction      & $N + 3$    & 5 \\
-        \hline
-        Kalman    & Position (1-state)   & 4          & 6 \\
-        \hline
-        Kalman    & Velocity (2-state)   & 10         & $\approx$20 \\
-        \hline
-    \end{tabular}
-\end{table}
-
-Any sensor channel in the firmware can be filtered by declaring a 
-\texttt{FilterInstance\_t} variable, calling the appropriate initialisation 
-function once, and then passing each new raw measurement to 
-\texttt{Filter\_Update()} to obtain the processed value. The choice of algorithm 
-depends on the signal characteristics and the computational budget available: 
+signal processing toolkit . 
+The choice of algorithm depends on the signal characteristics and the computational budget available: 
 the EMA and difference filters are the lightest options for high-rate channels, 
 while the Kalman filters offer adaptive, statistically grounded noise reduction 
 for channels where noise parameters can be characterised.
