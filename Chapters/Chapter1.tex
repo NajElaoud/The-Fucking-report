@@ -11,19 +11,19 @@
 \cfoot{\thepage}
 
 \section{Introduction}
-This chapter gives an overview of the general setting for the graduation project and the environment where it took place. It starts by introducing the host company, Be Wireless Solutions (BWS), explaining its structure, the kinds of work it does, and the main IoT solutions it offers. The chapter then outlines the project's requirements by explaining the problem that was identified, the idea behind the IO-Box platform, the development method used, and the project's goals and anticipated effects. This summary helps set the stage for understanding the technical information discussed in the following chapters.
+This chapter gives an overview of the professional and academic context of our graduation project. First, it starts by introducing the host company, Be Wireless Solutions (BWS), covering its structure, its line of work, and the main IoT solutions it offers. Then we'll outline the project's requirements, starting with explaining the problem that was identified, then explaining how the IOBOX platform came out of it, the development method used, and the project's goals and the effects of the project.
 
 \section{Academic Institution}
-The Higher Institute of Computer Science and Mathematics at the University of Monastir (ISIMM) was created by decree number 1623 on July 9, 2002. It is a public, scientific higher education institution that is supervised by the Ministry of Higher Education and Scientific Research\cite{0}. ISIMM provides engineering programs in Computer Science, Mathematics, and Electronics. This graduation project was done in the Electronics department, with a focus on Microelectronics, as part of the requirements for the National Diploma in Engineering in Applied Sciences and Technology.
+The Higher Institute of Computer Science and Mathematics of the University of Monastir (ISIMM) was created by decree number 1623 on July 9, 2002. It is a public scientific establishment of higher education under the authority of the Ministry of Higher Education and Scientific Research \cite{isimm}.     
+
+ISIMM offers engineering courses in Computer Science, Mathematics and Electronics. This graduation project was developed within the Electronics department, specialized in Microelectronics, following the requirements for the National Diploma in Engineering in Applied Sciences and Technology.
 
 %__ Hosting company presentation 
 \section{Host Company Presentation}
 
 \subsection{Company Overview}
-Be Wireless Solutions (BWS) is a Tunisian engineering company that focuses on IoT systems, embedded electronics, and industrial monitoring.
- The company creates and makes connected devices, communication gateways, smart sensors, and cloud-based platforms that help with real-time monitoring, control, and optimization of industrial processes.
-  BWS has knowledge in hardware design, embedded software development, wireless communication, and cloud services, allowing it to provide full industrial IoT solutions across various industries.
-   Since it was started, BWS has kept growing its business and formed partnerships both in Tunisia and around the world. The company has become skilled in areas like industrial automation, energy management, smart farming, fleet management, environmental monitoring, and remote equipment oversight.
+Be Wireless Solutions (BWS) is a technology group founded in 2016, specializing in the development of IoT/AI solutions to optimize the use of resources such as electricity, water, and fuel. Operating across three continents, BWS supports industrial companies, logistics and transportation companies, utilities, and local governments in their transition towards more sustainable and efficient resource management.\cite{bws}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.4\textwidth]{Figures/bws_logo.png}
@@ -98,52 +98,48 @@ BWS also offers cold-chain monitoring systems intended for warehouses, refrigera
 \section{Project Specification}
 
 \subsection{Problem Statement}
+Industrial IoT systems are usually composed of a multitude of sensors, actuators, and communication interfaces. For each client project BWS developed dedicated firmware for each new setup; every time there was a new set of peripherals, they would need to be reconfigured and the drivers rebuilt. This approach resulted in slower development, limited reuse of code between projects, and made system maintenance harder when hardware changed. 
 
-Industrial IoT systems usually use many sensors, actuators, and communication interfaces. Before this project, BWS created custom firmware for each new client setup. This meant they had to reconfigure and rebuild drivers every time there was a new mix of sensors, actuators, and communication interfaces. This method made development take longer, limited the ability to reuse code between projects, and made it harder to maintain the system when hardware changed. To fix these issues, BWS started the IOBOX project. The goal was to build a flexible, hardware-independent platform that could support various setups using one common firmware base.
+To address these issues, BWS initiated the IOBOX project. The aim was to develop a flexible, hardware-independent platform that can support different setups on one common firmware base. In industrial environments there are often different communication protocols and interface standards. Handling these through custom solutions adds complexity and makes it harder to scale the system. 
 
-In industrial settings, there are often different communication protocols and interface standards.
-Handling these through custom solutions adds complexity and makes it harder to scale the system.
-
-To tackle these challenges, Be Wireless Solutions began developing the IOBOX platform.
-The aim is to offer a customizable and reusable system for industrial data collection and control. This system aims to make adding peripherals easier while keeping the system flexible, easy to move between setups, and simple to maintain.
+The goal is to provide a customizable and reusable system for industrial data collection and control. This system aims to make the addition of peripherals easier while keeping the system flexible, easy to relocate between setups, and easier to maintain.
 
 \subsection{Presentation of the IOBOX Platform}
 
-The IOBOX is a flexible industrial system that helps connect sensors, actuators, and communication tools in industrial setups.
+The IOBOX is an industrial flexible system that helps to interconnect sensors, actuators and communication tools in industrial environments.
 
-It uses a modular design that separates the parts that depend on specific hardware from the parts that handle the main functions.
-This is done using special software tools like drivers, a Board Support Package, and a Hardware Abstraction Layer, which make it easier to use across different systems and keep it easy to update.
+It adopts a modular approach that distinguishes the parts dependent on specific hardware from the parts that manage the main functions.
+This is achieved through specific software tools such as drivers, a board support package, and Manager, which facilitate use in different systems and maintain an easy update.
 
-The IOBOX can work with various types of industrial equipment such as analog and digital inputs and outputs, communication ports, and measurement devices.
-Its software setup can be changed to fit different industrial needs without needing big changes to the firmware.
+The IOBOX can interface with various types of industrial equipment such as analog and digital inputs and outputs, communication ports and measurement devices.
+Its software configuration can be adapted to various industrial requirements without major changes in the firmware.
 
-By linking the hardware to the software in a simple way, the IOBOX makes it easier to put together and use in industrial enviorments.
+By connecting the hardware and the software in a straightforward way, the IOBOX simplifies the assembly and the use in industrial environments.
 
 \subsection{Project Objectives}
 
-The main goal of this project is to create and build the IOBOX platform, which can collect, handle, control, and send industrial data as it happens.
-More specifically, the project aims to:
+The key objective of this project is to develop the IOBOX platform which will collect, handle, control, and transmit data in real-time.
 
+To be more specific, the project aims to:
 \begin{itemize}
-    \item Create and set up a flexible industrial system for gathering data and managing control.
+    \item Developing a scalable framework that is capable of acquiring the data and controlling it according to industry needs.
     \item Provide a unified software abstraction layer for heterogeneous peripherals.
-    \item Support configurable analog and digital input/output functionalities.
-    \item Implement industrial communication protocols including Modbus RTU over RS485, CAN, LIN, and multi-channel UART, enabling interoperability with standard industrial equipment.
+    \item Delivering programmable analogue and digital input-output features.
+    \item Supporting industrial communication protocols such as Modbus RTU via RS485, CAN, LIN, and multi-channel UART, ensuring the compatibility with other industrial devices.
     \item Develop a modular software architecture based on abstraction layers and reusable software components.
-    \item Design the software architecture to allow new sensors, actuators, and communication interfaces to be added with minimal modification to existing code, through compile-time feature flags and a consistent BSP layer.
+    \item Design the software architecture to allow new sensors, actuators, and communication interfaces to be added with minimal modification to the existing code.
 \end{itemize}
 
-The developed platform contributes to reducing development effort and deployment time by providing a standardized and reusable embedded architecture capable of supporting a wide range of industrial applications.
+The resulting platform will lower development costs and reduce time-to-market by offering a reusable embedded architecture that adapts to various industrial settings.
 
 \subsection{Development Methodology}
 
-The IOBOX platform was built using the V-Model, a structured way of developing systems that's commonly used in embedded and industrial projects.
+The IOBOX platform followed the V-Model approach, a systematic development framework frequently employed in embedded and industrial applications.
 
-The V-Model connects each step of the development process with a matching testing step.
-This helps make sure that every part of the system, from the original requirements to the final tests, can be clearly traced back to its source.
+This methodology pairs every development stage with a corresponding validation phase. Such pairing ensures complete traceability throughout the system lifecycle, linking each component from initial specifications through final verification procedures.
 
-In this project, the V-Model was followed closely.
-During the requirements phase, the platform's features and technical needs were set based on what BWS needed. The system design phase created the four-layer software structure and picked the right hardware parts. The software design phase developed the BSP module interfaces, the communication manager designs, and the sensor driver details. The implementation phase included writing all the BSP drivers, sensor managers, communication modules, and the application layer. Testing was done by checking each BSP module individually, testing the sensor data flow and Modbus communication together, and finally testing the whole system to make sure it works as planned.
+The project adhered strictly to this V-Model structure. The requirements gathering phase established platform capabilities and technical specifications according to BWS operational needs. During system design, engineers defined the four-tier software architecture and selected appropriate hardware components. The detailed design phase produced BSP module specifications, communication manager blueprints, and sensor driver architectures. Implementation involved coding all BSP drivers, sensor management systems, communication protocols, and application-level functionality. Validation occurred through individual BSP module verification, integrated testing of sensor data pathways and Modbus communications, and comprehensive system-wide testing to confirm operational requirements were met.
+
 \begin{table}[H]
     \centering
     \caption{Application of the V-Model to the Project}
