@@ -134,12 +134,11 @@ The resulting platform will lower development costs and reduce time-to-market by
 
 \subsection{Development Methodology}
 
-The IOBOX platform followed the V-Model approach, a systematic development framework frequently employed in embedded and industrial applications.
+The development of this project was based on the V-Model approach, a systematic development framework widely used in embedded and industrial applications. This methodology aligns each development stage with a corresponding validation phase; this pairing helps maintain traceability throughout the system's lifecycle.
 
-This methodology pairs every development stage with a corresponding validation phase. Such pairing ensures complete traceability throughout the system lifecycle, linking each component from initial specifications through final verification procedures.
+The project activities were organized according to the different phases of the V-Model. The requirements-gathering phase focused on identifying the platform capabilities and technical constraints required by BWS. Once these requirements were established, the system architecture was designed, including the definition of the four-layer software structure and the selection of the hardware components. The detailed design stage then concentrated on the BSP modules, communication manager, and sensor drivers.
 
-The project adhered strictly to this V-Model structure. The requirements gathering phase established platform capabilities and technical specifications according to BWS operational needs. During system design, engineers defined the four-tier software architecture and selected appropriate hardware components. The detailed design phase produced BSP module specifications, communication manager blueprints, and sensor driver architectures. Implementation involved coding all BSP drivers, sensor management systems, communication protocols, and application-level functionality. Validation occurred through individual BSP module verification, integrated testing of sensor data pathways and Modbus communications, and comprehensive system-wide testing to confirm operational requirements were met.
-
+After the design work was completed, the implementation phase involved coding BSP drivers, sensor management systems, communication protocols, and application-level functionalities. The project's validation included testing each BSP module individually, verifying sensor data acquisition and Modbus communication in an integrated environment, and performing complete system-wide testing to confirm that all operational requirements were met.
 \begin{table}[H]
     \centering
     \caption{Application of the V-Model to the Project}
@@ -171,14 +170,14 @@ The use of the V-Model helps improve the quality of the software, lowers the ris
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/v-model.png}
+    \includegraphics[width=0.7\textwidth]{Figures/v-model.png}
     \caption{V-Model development lifecycle}
     \label{fig:vmodel}
 \end{figure}
 
 \section{Conclusion}
 
-This chapter explained the main structure of the project. It started by introducing the university and the company where the project is based. Then, it gave a summary of what the company does and the technologies they use. Next, it went into more detail about the project's requirements, the problem it aims to solve, its goals, and the approach used to develop it.
+This chapter explained the main structure of the project, starting by introducing the academic institution and the hosting company. Next, we presented the project's framework by describing the problem it aims to solve, its objectives, and the requirements that guided it's development. Finally, we outlined the methodology adopted throughout the project.
 
 The next chapter talks about the technical setup of the IOBox platform.
 It covers the physical parts of the system, the software tools used for development, the ways devices communicate with each other, and the extra parts of the system that support the main functions.
