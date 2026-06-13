@@ -10,33 +10,12 @@
 
 \section{Introduction}
 
-The last chapters established the project context and extracting the platform requirements then we 
-present the hardware components and communication protocols that form the technical 
-core of the IOBOX platform. This chapter explains the design decisions and practical 
-implementation work transforming that foundation into a functional embedded system.
-
-The implementation is based around a  software architecture that separates 
-hardware code from higher level application code . the foundation was the Board 
-Support Package (BSP) which provide a peripheral drivers for every hardware interface 
-mentionned on the platform. after that we worked on a Manager layer  contains the communication 
-protocols and sensor drivers delivering a clean hardware independent APIs to the rest of 
-the system . the head of our architecture is the Application layer which coordinates all modules through a 
- task scheduler and assembles sensor data into structured frames.
-
-The chapter begins by describing the hardware architecture of the IOBOX platform, 
-followed  by the software architecture and its constituent layers. 
-Each subsection covers the design logic and the implementation approach and the  
-technical choices made during development. The chapter concludes with a summary of the 
-results obtained and a discussion of the platform's flexibility for industrial deployment.
-\section{Hardware architecture}
-
+In this chapter, we present the design and practical implementation of the IOBOX platform. Building on the requirements and hardware foundations introduced in the previous chapters, we describe the key design choices and software architecture that transform these elements into a functional embedded system. The discussion provides a concise overview of the layered implementation approach and the main technical decisions that ensure modularity, scalability, and suitability for industrial applications.
 
 \section{Software Architecture}
 
-The firmware of the IOBOX platform is organised into three distinct horizontal layers: 
-the Board Support Package (BSP), the Manager layer, and the Application layer. This 
-separation was adopted to isolate hardware-specific code from protocol logic and 
-application behaviour, enabling each layer to evolve independently. A central 
+The firmware of the IOBOX platform follows a structured four-layer architecture. At the lowest level, the hardware abstraction layer (HAL) that provides direct communication with the hardware. Above it, the Board Support Package (BSP) handles board-specific configuration including bus initialization and public API. The third layer, a Manager layer encapsulating peripheral control and communication protocol logic, as a higher-level API. At the top, an application layer that implements the system's business logic and task management and execution. This strict architecture enforces a clear separation of the code layers ensuring that each layer can only interact with the APIs of the layer beneath it.
+ A central 
 configuration file, \texttt{feature\_config.h}, governs the compile-time inclusion of 
 every hardware feature through preprocessor flags, ensuring that only the peripherals 
 and protocols required for a given deployment are compiled into the firmware binary.
@@ -50,13 +29,12 @@ Application layers during each execution cycle.
 % --- Figure: layered software architecture diagram ---
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/software_architecture.png}
+    \includegraphics[width=\textwidth]{Figures/software_arch.png}
     \caption{Layered software architecture of the IOBOX platform}
     \label{fig:software_architecture}
 \end{figure}
 
-The following subsections describe each layer in detail, from the lowest hardware 
-abstraction level up to the application logic.
+The following subsections will describe each layer in detail, from the lowest software layer that interfaces directly with the hardware to the highest layer that implements application logic.
 
 %------------------------------------------------------------------
 \subsection{Board Support Package Layer}
