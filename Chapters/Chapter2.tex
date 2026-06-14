@@ -272,6 +272,40 @@ Within the IOBOX platform, the HTS221TR is used to acquire ambient temperature a
     \label{fig:hts221}
 \end{figure}
 
+\subsubsection{RS485-to-USB Converter}
+The RS485-to-USB converter is a compact interface device that bridges the 
+RS485 serial communication standard and the Universal Serial Bus (USB) .
+Within the IOBOX project, the RS485-to-USB converter played a central role 
+during the development and validation phases. It served as the physical link 
+between the STM32G474MBTx target board and the host computer, enabling the 
+monitoring, testing, and debugging of the Modbus RTU communication layer 
+implemented over the RS485 interface.
+\begin{table}[H]
+\centering
+\caption{Key Characteristics of the RS485-to-USB Converter}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Parameter}                & \textbf{Value}                        \\ \hline
+Type                              & RS485-to-USB Serial Adapter           \\ \hline
+Communication Standards           & USB 2.0, EIA/TIA-485 (RS485)          \\ \hline
+USB Interface                     & USB Type-A / Type-B (Full Speed)      \\ \hline
+RS485 Interface                   & Half-duplex, 2-wire differential      \\ \hline
+Operating Voltage                 & Bus-powered via USB (5\,V)            \\ \hline
+Maximum Data Rate                 & Up to 3\,Mbps                         \\ \hline
+Isolation                         & Optional (model-dependent)            \\ \hline
+OS Compatibility                  & Windows, Linux, macOS                 \\ \hline
+\end{tabular}
+\label{tab:rs485_usb}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/rs485_usb_converter.jpg}
+    \caption{RS485-to-USB converter used for communication testing}
+    \label{fig:rs485_usb}
+\end{figure}
+
+
 \section{Peripherals}
 
 \subsection{Digital-to-Analog Converter (DAC)}
@@ -589,6 +623,22 @@ GitLab was used as the version control and collaboration platform throughout the
     \includegraphics[width=0.2\textwidth]{Figures/gitlab_logo.png}
     \caption{GitLab logo}
     \label{fig:gitlab}
+\end{figure}
+
+\subsubsection{Modbus Poll}
+Modbus Poll is a Windows-based Modbus master simulation and diagnostic 
+tool widely used in industrial embedded development. It allows engineers 
+to send Modbus requests, read and write registers and coils, and monitor 
+the raw communication frames. 
+In the context of the IOBOX project, Modbus Poll was used as the primary 
+host-side interface for validating the Modbus RTU slave implementation 
+running on the STM32G474MBTx. Connected to the target board through the 
+RS485-to-USB converter.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{Figures/modbus_poll.jpg}
+    \caption{Modbus Poll logo}
+    \label{fig:Modbus Poll}
 \end{figure}
 
 \subsection{Conclusion}

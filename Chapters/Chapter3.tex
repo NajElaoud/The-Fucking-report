@@ -339,33 +339,72 @@ High-Pass, Simple Difference, SMA Subtraction) extarcts rapid changes and remove
 drift. Kalman filters improve measurement accuracy by combining sensor readings with model predictions .
 while the two-state version also estimates the rate of change of the measured quantity.
 the available filters offer a filtering effectiveness which allows the Application layer to use the most suitable solution for each signal.
+
 %------------------------------------------------------------------
 \subsection{Application Layer}
 %------------------------------------------------------------------
 
-The Application layer is the topmost layer of the firmware stack. It does not 
-interact with hardware directly but instead coordinates the Manager modules, 
-orchestrates data flow, and assembles the final output frame. It is composed of 
-four modules: the cooperative task scheduler, the Sensor Module, the Modbus 
-Module, and the Frame Builder.
+The application layer is the highest firmware layer and acts as the brain of the system. It does not interact with hardware directly; instead, it coordinates the manager modules, handles data exchange, and constructs the final output frame. Each system functionality is implemented through a dedicated application module built on top of manager APIs and responsible for a specific part of the system logic.
 
-\subsubsection{Cooperative Task Scheduler}
+For this project, four main modules were developed: a sensor module for data acquisition and processing, a Modbus RTU slave module for communication handling, a frame builder for UART-based communication, and a task manager to coordinate module execution. Each module is enabled through a compile-time feature macro defined in \texttt{feature\_config.h}, ensuring that only the required features are included and executed in the final firmware deployment.
 
-Rather than employing a real-time operating system, a lightweight cooperative 
-scheduler was implemented directly in \texttt{main.c}. The scheduler is based on 
-a statically allocated array of \texttt{TaskEntry} structures, each holding a 
-function pointer (\texttt{task\_fn}), a period in milliseconds 
-(\texttt{period\_ms}), and a timestamp of the last execution 
-(\texttt{last\_ms}). The dispatcher \texttt{Application\_RunTasks()} iterates 
-over the array on every pass of the main loop and invokes each task function 
-whenever the elapsed time since its last execution meets or exceeds its 
-configured period.
+Figure \ref{fig:app_flow} illustrates the execution workflow of the application layer. It shows the initialization phase, the cyclic cooperative task manager, and the sequential execution of core modules including sensor acquisition, CAN monitoring, EEPROM storage, and frame construction. The diagram also highlights the event-driven nature of the Modbus RTU slave, which is triggered by interrupt-based request detection while response handling is performed within the scheduled task context.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.8cm, every node/.style={align=center}]
+        % Start / Init
+        \node (start) [draw, rounded corners, fill=gray!15, minimum width=3.5cm]
+        {\textbf{Start}};
+        \node (init) [draw, rounded corners, below of=start, fill=blue!10, minimum width=5cm]
+        {Module Initialization\\(enabled via \texttt{feature\_config.h} macros)};
+        % Main loop
+        \node (loop) [draw, rounded corners, below of=init, fill=green!10, minimum width=5cm]
+        {\textbf{Application\_RunTasks()}\\Task Manager (Periodic Execution)};
+        % Timing condition
+        \node (condition) [draw , dashed, rounded corners, below of=loop, fill=blue!5, minimum width=5.5cm]
+        {Execution Rule:\\$HAL\_GetTick() - last\_ms \geq period\_ms$};
+        % Sequential pipeline
+        \node (sensor) [draw, rounded corners, below of=condition, fill=orange!15, minimum width=4.5cm]
+        {Sensor Module Execution};
+        \node (can) [draw, rounded corners, below of=sensor, fill=orange!15, minimum width=4.5cm]
+        {CAN Module Execution};
+        \node (eeprom) [draw, rounded corners, below of=can, fill=orange!15, minimum width=4.5cm]
+        {EEPROM Data Storage};
+        \node (frame) [draw, rounded corners, below of=eeprom, fill=orange!15, minimum width=4.5cm]
+        {Frame Builder\\(UART / IoT Preparation)};
+        % Conditional Modbus
+        \node (modbus) [draw, dashed, rounded corners, right of=can, xshift=5cm, fill=red!10, minimum width=4.8cm]
+        {Modbus RTU Slave\\(Triggered on Master Request)};
+        % Loop back
+        \node (back) [draw, rounded corners, below of=frame, fill=green!10, minimum width=5cm]
+        {Loop Restart};
 
-Six tasks are registered in the current configuration, as shown in 
-Table~\ref{tab:task_schedule}. All task functions are non-blocking by design: 
-they return immediately if no new data is available or if their internal period 
-has not elapsed, preventing any single task from starving the others.
+        % Arrows
+        \draw[->] (start) -- (init);
+        \draw[->] (init) -- (loop);
+        \draw[->] (loop) -- (condition);
+        \draw[->] (condition) -- (sensor);
+        \draw[->] (sensor) -- (can);
+        \draw[->] (can) -- (eeprom);
+        \draw[->] (eeprom) -- (frame);
+        \draw[->] (frame) -- (back);
+        \draw[->] (back.west) .. controls +(-3,1) and +(-3,-1) .. (sensor.west);
+        % Modbus event arrow
+        \draw[->, dashed, red] (loop.east) .. controls +(3,0) and +(0,0) .. (modbus.north);
+        \draw[->, red] (modbus.south) .. controls +(0,0) and +(3,0) .. (back.east);
 
+    \end{tikzpicture}
+    \caption{Application Layer Workflow diagram}
+    \label{fig:app_flow}
+\end{figure}
+
+\subsubsection{Cooperative Task manager}
+
+For this project, we used a lightweight cooperative task manager instead of the traditional RTOS approach. The task manager is implemented as a statically allocated array of task entry structures, where each element is initialized with a timestamp representing the last execution time, an execution period in milliseconds, and a function pointer.
+
+To run these tasks, the dispatcher function \texttt{Application\_RunTasks()} iterates over the array elements during each iteration of the main loop and invokes each module task whenever the elapsed time since its last execution equals or exceeds its configured period.
+
+Currently, six tasks are registered in the current system configuration, as shown in Table~3.2. Most module task functions are designed to be non-blocking, with some relying on interrupts. Each task returns immediately if no new data is available or if their internal period has not elapsed, preventing any single task from monopolizing MCU time or delaying the execution of other tasks.
 \begin{table}[H]
     \centering
     \caption{Registered tasks in the cooperative scheduler}
@@ -374,9 +413,9 @@ has not elapsed, preventing any single task from starving the others.
         \hline
         \textbf{Task Function} & \textbf{Period (ms)} & \textbf{Responsibility} \\
         \hline
-        \texttt{SensorModule\_Task}  & 10   & Poll all enabled sensors \\
+        \texttt{Sensor\_Module\_Task}  & 10   & Poll all enabled sensors \\
         \hline
-        \texttt{CAN\_Manager\_Run}   & 10   & Drain CAN FIFO and update \texttt{sysboard.can} \\
+        \texttt{CAN\_Module\_Run}   & 10   & Drain CAN FIFO and update \texttt{sysboard.can} \\
         \hline
         \texttt{Modbus\_Module\_Poll} & 20  & Process incoming Modbus RTU frames \\
         \hline
@@ -384,71 +423,125 @@ has not elapsed, preventing any single task from starving the others.
         \hline
         \texttt{EEPROM\_LoadTask}    & 1000 & Reload last stored frame from EEPROM \\
         \hline
-        \texttt{FrameBuilderTask}    & 1000 & Assemble and finalise the output \texttt{IoFrame} \\
+        \texttt{FrameBuilder\_Task}    & 1000 & Assemble and finalise the output \texttt{IoFrame} \\
         \hline
     \end{tabular}
 \end{table}
 
 \subsubsection{Sensor Module}
+The Sensor Module provides a unified acquisition interface for all enabled sensors. It maintains per-sensor timestamp variables and determines whether each sensor's configured sampling period has elapsed by comparing the current system tick with the stored timestamps during each \texttt{SensorModule\_Task()} execution. 
 
-The Sensor Module, implemented in \texttt{Sensor\_module.c}, provides a unified 
-acquisition interface for all enabled sensors. It maintains one private 
-timestamp variable per sensor and, on each invocation of 
-\texttt{SensorModule\_Task()}, compares the current tick against each timestamp 
-to determine whether the sensor's configured sampling period has elapsed. When it 
-has, the corresponding manager acquisition function is called and the result is 
-written directly into the \texttt{sysboard} global structure. The per-sensor 
-sampling periods are defined centrally in \texttt{feature\_config.h}: 1000~ms 
-for the HTS221TR, 1000~ms for the ENS210, and 1000~ms for the OPT3001DNPR. 
-The module is fully driven by compile-time feature flags; sensors disabled at 
-configuration time introduce no runtime overhead.
+When a period expires, the corresponding sensor readings are immediately updated in the \texttt{Sysboard} global structure, and the associated manager function is invoked.
+
+The sensor sampling periods are defined in \texttt{feature\_config.h}: 1000\,ms for the \texttt{HTS221TR}, 1000\,ms for the \texttt{ENS210}, and 1000\,ms for the \texttt{OPT3001DNPR}. The module is fully driven by compile-time feature flags; disabled sensors introduce no runtime overhead when excluded at configuration time.
+
+Figure \ref{fig:sensor_module_flow} illustrates the Sensor Module execution flow. It shows the periodic tick check and conditional execution of each sensor task based on its configured sampling period. The diagram highlights the non-blocking behavior, where each sensor updates the shared system data structure independently without delaying other tasks.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.6cm, every node/.style={align=center}]
+        % Start
+        \node (start) [draw, rounded corners, fill=gray!15, minimum width=3.5cm]
+        {\textbf{SensorModule\_Task()}};
+        % Init / context
+        \node (context) [draw, rounded corners, below of=start, fill=blue!10, minimum width=6cm]
+        {Read System Tick\\\texttt{now = HAL\_GetTick()}};
+        % HTS221 block
+        \node (hts) [draw, rounded corners, below of=context, fill=orange!15, minimum width=5.5cm]
+        {HTS221 Task\\(Humidity \& Temperature)};
+        % HTS condition
+        \node (hts_cond) [draw, dashed, rounded corners, below of=hts, fill=blue!5, minimum width=6cm]
+        {Condition:\\$now - last\_hts221 \geq period$};
+        % OPT3001 block
+        \node (opt) [draw, rounded corners, below of=hts_cond, fill=orange!15, minimum width=5.5cm]
+        {OPT3001 Task\\(Light Intensity)};
+        % OPT condition
+        \node (opt_cond) [draw, dashed, rounded corners, below of=opt, fill=blue!5, minimum width=6cm]
+        {Condition:\\$now - last\_opt3001 \geq period$};
+        % ENS210 block
+        \node (ens) [draw, rounded corners, below of=opt_cond, fill=orange!15, minimum width=5.5cm]
+        {ENS210 Task\\(Temperature \& Humidity)};
+        % ENS condition
+        \node (ens_cond) [draw, dashed, rounded corners, below of=ens, fill=blue!5, minimum width=6cm]
+        {Condition:\\$now - last\_ens210 \geq period$};
+        % Update / output
+        \node (update) [draw, rounded corners, below of=ens_cond, fill=green!10, minimum width=6cm]
+        {Update \texttt{sysboard} Structure};
+        % End
+        \node (end) [draw, rounded corners, below of=update, fill=gray!15, minimum width=3.5cm]
+        {\textbf{Return Immediately}};
+
+        % Arrows
+        \draw[->] (start) -- (context);
+        \draw[->] (context) -- (hts);
+        \draw[->] (hts) -- (hts_cond);
+        \draw[->] (hts_cond) -- (opt);
+        \draw[->] (opt) -- (opt_cond);
+        \draw[->] (opt_cond) -- (ens);
+        \draw[->] (ens) -- (ens_cond);
+        \draw[->] (ens_cond) -- (update);
+        \draw[->] (update) -- (end);
+
+    \end{tikzpicture}
+    \caption{Sensor Module Periodic Execution Flow}
+    \label{fig:sensor_module_flow}
+\end{figure}
 
 \subsubsection{Modbus Application Module}
+The Modbus module provides a simple interface between the Modbus communication layer and the system data. Upon receiving a Modbus master request, the module identifies what data is being accessed and links each request to its corresponding value that's stored in the system. Depending on the request type, it either reads data from the system or updates it, then returns the appropriate response. Overall, it acts as a routing layer that connects external Modbus messages to internal application variables in a structured and consistent way.
 
-The Modbus Application Module forms the bridge between the Modbus RTU stack and 
-the platform data model. It defines a static register map that associates each 
-Modbus register address and object type with the corresponding field in the shared 
-\texttt{SystemBoard} structure and an access permission flag. The current 
-register map exposes five read-only input registers: ENS210 humidity at 
-address~0, ENS210 temperature at address~1, HTS221TR humidity at address~2, 
-HTS221TR temperature at address~3, and OPT3001 illuminance at address~4. 
-Floating-point values are scaled by a factor of 100 before transmission, 
-preserving two decimal places within the 16-bit Modbus register format.
-
-Handlers for each supported function code are registered in the Modbus slave 
-handle and invoked by the Modbus Manager dispatcher upon receipt of a valid 
-request.
-
-\begin{table}[H]
+Figure \ref{fig:modbus_module_flow} illustrates the Modbus module polling and data access flow. It shows how incoming Modbus requests are decoded and mapped to the corresponding object through a lookup in the object map. Depending on the object type, the request is dispatched to the appropriate read or write handler, which accesses the Sysboard global structure. The diagram highlights the dynamic register abstraction layer that decouples Modbus communication from hardware-specific data sources.
+\begin{figure}[H]
     \centering
-    \caption{Modbus input register map}
-    \label{tab:modbus_map}
-    \begin{tabular}{|c|l|l|c|}
-        \hline
-        \textbf{Address} & \textbf{Source} & \textbf{Physical Quantity} & \textbf{Scale} \\
-        \hline
-        0 & ENS210 humidity field   & Relative humidity (\%) & $\times 100$ \\
-        \hline
-        1 & ENS210 temperature field & Temperature (°C)      & $\times 100$ \\
-        \hline
-        2 & HTS221TR humidity field  & Relative humidity (\%) & $\times 100$ \\
-        \hline
-        3 & HTS221TR temperature field & Temperature (°C)    & $\times 100$ \\
-        \hline
-        4 & OPT3001 illuminance field & Illuminance (lux)    & $\times 100$ \\
-        \hline
-    \end{tabular}
-\end{table}
+    \begin{tikzpicture}[node distance=1.6cm, every node/.style={align=center}]
+        % Start
+        \node (start) [draw, rounded corners, fill=gray!15, minimum width=4cm]
+        {\textbf{Modbus\_Module\_Poll()}};
+        % Slave entry
+        \node (slave) [draw, rounded corners, below of=start, fill=blue!10, minimum width=6cm]
+        {Modbus Slave Handler\\\texttt{Modbus\_Slave\_Poll()}};
+        % Request decode
+        \node (decode) [draw, rounded corners, below of=slave, fill=orange!15, minimum width=6cm]
+        {Decode Modbus Request\\(Function Code + Address)};
+        % Find object
+        \node (find) [draw, rounded corners, below of=decode, fill=orange!10, minimum width=6cm]
+        {Lookup Object\\\texttt{FindObject(addr, type)}};
+        % Condition
+        \node (cond) [draw, dashed, rounded corners, below of=find, fill=blue!5, minimum width=7cm]
+        {Condition:\\Object exists in \texttt{object\_map} ?};
+        % Read/Write split
+        \node (rw) [draw, rounded corners, below of=cond, fill=purple!10, minimum width=6cm]
+        {Dispatch to Handler\\Read / Write Function Pointer};
+        % Memory access
+        \node (mem) [draw, rounded corners, below of=rw, fill=orange!15, minimum width=6cm]
+        {Access Sysboard Data\\Read or Modify Value};
+        % Response
+        \node (resp) [draw, rounded corners, below of=mem, fill=green!10, minimum width=6cm]
+        {Build Modbus Response Frame};
+        % End
+        \node (end) [draw, rounded corners, below of=resp, fill=gray!15, minimum width=4cm]
+        {\textbf{Return Response}};
+
+        % Arrows
+        \draw[->] (start) -- (slave);
+        \draw[->] (slave) -- (decode);
+        \draw[->] (decode) -- (find);
+        \draw[->] (find) -- (cond);
+        \draw[->] (cond) -- (rw);
+        \draw[->] (rw) -- (mem);
+        \draw[->] (mem) -- (resp);
+        \draw[->] (resp) -- (end);
+
+    \end{tikzpicture}
+    \caption{Modbus Module Polling and Object Access Flow}
+    \label{fig:modbus_module_flow}
+\end{figure}
 
 \subsubsection{Frame Builder}
 
-The Frame Builder is responsible for assembling the final output structure that 
-the IOBOX platform transmits to external systems. Rather than forwarding raw 
+The Frame Builder module is responsible for assembling the final output structure that the IOBOX platform transmits to external systems such as IoT platforms and UART devices. Rather than forwarding raw 
 sensor readings directly, the platform encapsulates all acquired data within a 
 structured binary frame whose layout is illustrated in 
-Figure~\ref{fig:ioframe_structure}. This design ensures that any receiving system 
-can unambiguously identify, validate, and decode the payload regardless of which 
-sensors or modules are active in a given deployment.
+Figure~\ref{fig:ioframe_structure}. This design ensures that any receiver can clearly identify, validate, and decode the payload regardless of which peripheral is active in a given deployment.
 
 \begin{figure}[H]
     \centering
@@ -457,33 +550,58 @@ sensors or modules are active in a given deployment.
     \label{fig:ioframe_structure}
 \end{figure}
 
-The frame assembly routine populates each field from the most recently 
-persisted system state, then computes and appends a CRC checksum over all 
-preceding fields. The complete frame format is described in detail below.
+Figure \ref{fig:frame_builder_flow} illustrates the frame construction workflow of this module. It shows how the periodic task retrieves the latest system snapshot from EEPROM and then distributes the data into parallel processing paths, including sensor data mapping and CRC computation. In parallel, protocol metadata such as frame delimiters and identifiers are prepared before being merged with the aggregated payload. The diagram highlights the final composition stage, where all components are assembled into a complete IoFrame and passed as a transmission-ready structure with an integrity-protected checksum.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.8cm, every node/.style={align=center}]
+        % Start
+        \node (task) [draw, rounded corners, fill=gray!15, minimum width=4cm]
+        {\textbf{FrameBuilderTask()}};
+        % EEPROM
+        \node (eeprom) [draw, rounded corners, below of=task, fill=blue!10, minimum width=6cm]
+        {Retrieve Latest Data\\\texttt{EEPROM\_GetLastLoaded()}};
+        % Data aggregation split
+        \node (sensor) [draw, rounded corners, below left=0.5cm and 1cm of eeprom, fill=orange!10, minimum width=3.5cm]
+        {Sensor Mapping};
+        % Header
+        \node (header) [draw, rounded corners, below of=eeprom, fill=blue!5, minimum width=6cm]
+        {Frame Header Construction\\Start = 0xAA, End = 0x55\\Device / IOBOX / Mask IDs};
+        % CRC
+        \node (crc) [draw, rounded corners, below right=0.5cm and 1cm of eeprom, fill=purple!10, minimum width=4cm]
+        {CRC16 Calculation\\Polynomial: 0xA001\\Excludes CRC Field};
+        % Build frame
+        \node (build) [draw, rounded corners, below of=header, fill=orange!15, minimum width=6cm]
+        {BuildFinalFrame()\\Aggregate System Data};
+        % Output
+        \node (out) [draw, rounded corners, below of=build, fill=green!10, minimum width=5cm]
+        {Final IoFrame Ready for Transmission};
+        % Arrows
+        \draw[->] (task) -- (eeprom);
+        \draw[->] (eeprom.west) .. controls +(-3cm,0) and +(0,0) .. (sensor.north);
+        \draw[->] (eeprom) -- (header);
+        \draw[->] (eeprom.east) .. controls +(3cm,0) and +(0,0) .. (crc.north);
+        \draw[->] (crc) |- (build);
+        \draw[->] (header) -- (build);
+        \draw[->] (sensor) |-  (build);
+        \draw[->] (build) -- (out);
+    \end{tikzpicture}
+    \caption{Frame Builder Module Workflow}
+    \label{fig:frame_builder_flow}
+\end{figure}
 
-\paragraph{Start Byte.}
-A fixed synchronisation marker (\texttt{0xAA}) that signals the beginning of a 
-valid frame to any receiver scanning an incoming byte stream, allowing frame 
-boundaries to be established without relying on inter-frame timing gaps.
+The frame assembly routine fills each field with the most recently persisted system state, then computes and appends a CRC checksum over all preceding fields. The complete frame format is described in detail below.
 
-\paragraph{Device Type.}
-Identifies the category of the transmitting device, allowing a network to host 
-multiple types of embedded nodes simultaneously. A receiving gateway inspects 
-this field to apply the appropriate decoding logic without prior knowledge of 
-the sender's identity.
+\paragraph{Start Byte:}
+A fixed synchronisation marker (\texttt{0xAA}) that signals the beginning of a valid frame to any receiver scanning an incoming byte stream.
 
-\paragraph{IOBOX ID.}
-Carries the unique numeric identifier of the specific IOBOX unit that generated 
-the frame. In multi-node deployments, this field allows a receiving system to 
-associate each frame with its physical origin without requiring any session or 
-connection establishment.
+\paragraph{Device Type:}
+Identifies the category of the transmitting device, allowing the web server to host multiple types of embedded nodes simultaneously. In order to apply the proper frame decoding logic, the receiving gateway examines this field without knowing the sender's identity beforehand.
 
-\paragraph{Mask ID.}
-A configuration bitmap describing which sensors and communication modules are 
-active and contributing data to the current frame. Each bit corresponds to one 
-module, as detailed in Table~\ref{tab:mask_id}. The receiver reads this field 
-before parsing the payload to determine the exact byte layout of the Data field, 
-providing both flexibility and forward compatibility.
+\paragraph{IOBOX ID:}
+Carries the unique numeric identifier of the specific IOBOX unit. In multi-node deployments, this field allows the receiver to associate each frame with its physical origin without requiring any session or connection establishment.
+
+\paragraph{Mask ID:}
+A configuration bitmap indicating which sensors and communication modules are active in the current frame. Each bit maps to a specific module, as detailed in Table~\ref{tab:mask_id}. The receiver uses this field to interpret the payload layout, ensuring flexible and forward-compatible parsing.
 
 \begin{table}[H]
     \centering
@@ -508,33 +626,19 @@ providing both flexibility and forward compatibility.
     \end{tabular}
 \end{table}
 
-\paragraph{Length.}
-Specifies the total size of the Data field in bytes, making the frame 
-self-describing. The receiver uses this field to locate the CRC and End Byte at 
-their correct positions without re-deriving the payload size from the Mask ID.
+\paragraph{Length:}
+Provides the total size of the data field in bytes, making the frame self-describing. The receiver uses this field to locate the CRC and end byte without recalculating the payload size from the mask ID.
 
-\paragraph{Data.}
-Contains the measurement values and communication data collected during the 
-current acquisition cycle. Its contents are governed entirely by the active bits 
-in the Mask ID field. In the current configuration, the payload includes 
-temperature and humidity readings from both sensor units, the OPT3001DNPR 
-illuminance value, and the CAN frame payload comprising the message identifier, 
-RTR flag, data length code, and up to eight data bytes.
+\paragraph{Data:}
+Contains the measurement values and communication data collected during the most recent acquisition cycle where the Mask ID field's active bits completely control its contents.
 
-\paragraph{CRC.}
-A 16-bit integrity checksum computed over all preceding fields using the 
-CRC-16/IBM polynomial. The receiver verifies this field before consuming any 
-measurement data; a mismatch indicates a transmission error or a corrupted frame 
-and requires the frame to be discarded.
+\paragraph{CRC:}
+A 16-bit CRC computed over all preceding fields using the CRC-16/IBM polynomial. The receiver validates it before processing the data; any mismatch indicates corruption and causes the frame to be discarded.
 
-\paragraph{End Byte.}
-A fixed termination marker (\texttt{0x55}) that constitutes a second layer of 
-frame boundary validation. Together with the Start Byte, it allows the receiver 
-to detect framing errors — for example, those caused by a corrupted Length field 
-— even when the CRC alone might not reveal the misalignment.
+\paragraph{End Byte:}
+A fixed end of message marker (\texttt{0x55}) providing an additional frame boundary check. Combined with the Start Byte, it helps detect framing errors caused by issues such as a corrupted Length field, even when CRC validation alone may not catch misalignment.
 
 The complete field layout is summarised in Table~\ref{tab:ioframe_fields}.
-
 \begin{table}[H]
     \centering
     \caption{IoFrame field summary}
@@ -567,29 +671,8 @@ every field sequentially before computing and inserting the CRC. This design
 ensures that the output frame always reflects the most recently stored platform 
 state, providing continuity across power cycles and making the frame contents 
 auditable through the non-volatile storage layer.
-\subsubsection{System Data Flow}
 
-% --- Figure: data flow diagram ---
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{Figures/data_flow.png}
-    \caption{End-to-end data flow across the three firmware layers}
-    \label{fig:data_flow}
-\end{figure}
-
-The complete data path through the system can be summarised as follows. Physical 
-sensor measurements are acquired by the Sensor Module and written into 
-\texttt{sysboard}. Simultaneously, CAN frames captured by the CAN Manager are 
-stored in the same structure. At every 1000~ms interval, the EEPROM Store task 
-serialises \texttt{sysboard} into a \texttt{DataFrame} and writes it to 
-non-volatile memory; the EEPROM Load task immediately retrieves the last valid 
-frame. Finally, the Frame Builder consumes the loaded \texttt{DataFrame} and 
-produces the \texttt{IoFrame} output, ready for transmission. Throughout this 
-pipeline, any Modbus master connected via RS485 may read live sensor values 
-directly from \texttt{sysboard} through the Modbus Application Module at any 
-point in the cycle.
-
-\section*{} % transition placeholder — Conclusion follows
+%\section*{} % transition placeholder — Conclusion follows
 The software architecture described in this section provides a clean separation 
 of concerns, compile-time configurability, and a deterministic execution model 
 without the overhead of a real-time operating system. The following section 
@@ -614,7 +697,7 @@ physically reasonable, so the ADC driver was considered validated at that point.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\textwidth]{Figures/adc_test.png}
+    \includegraphics[width=0.5\textwidth]{Figures/adc_test.png}
     \caption{ADC raw output across 19 channels}
     \label{fig:adc_test}
 \end{figure}
@@ -629,7 +712,7 @@ expected response format.That was enough to confirm the SPI bus was working.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/spi_test.png}
+    \includegraphics[width=0.65\textwidth]{Figures/spi_test.png}
     \caption{SPI receive frames captured on the debug terminal}
     \label{fig:spi_test}
 \end{figure}
@@ -648,7 +731,7 @@ exactly what was sent from the CAN GPS module side meaning our CAN module works 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/can_std_test.png}
+    \includegraphics[width=0.56\textwidth]{Figures/can_std_test.png}
     \caption{CAN frames received with standard 11-bit identifiers}
     \label{fig:can_std_test}
 \end{figure}
@@ -692,7 +775,7 @@ the conversion gave physically corrected numbers.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/ens210_test.png}
+    \includegraphics[width=0.4\textwidth]{Figures/ens210_test.png}
     \caption{ENS210 humidity readings during ambient and induced humidity test}
     \label{fig:ens210_test}
 \end{figure}
@@ -714,7 +797,7 @@ temperature conversion is being applied successfully .
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{Figures/ens210_temp_test.png}
+    \includegraphics[width=0.3\textwidth]{Figures/ens210_temp_test.png}
     \caption{ENS210 temperature readings showing stabilisation after sensor warm-up}
     \label{fig:ens210_temp_test}
 \end{figure}
@@ -733,13 +816,12 @@ which validates our work with the adressing , the conversion and the good calibr
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.65\textwidth]{Figures/opt3001_test.png}
+    \includegraphics[width=0.4\textwidth]{Figures/opt3001_test.png}
     \caption{OPT3001 raw register values and computed lux output}
     \label{fig:opt3001_test}
 \end{figure}
 
 \subsection{HTS221TR Sensor Validation}
-
 The objective of this test was to confirm that the HTS221TR driver was 
 correctly acquiring temperature and humidity data and exposing it through 
 the communication interface.
@@ -750,47 +832,32 @@ being read and transmitted correctly.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figures/hts221_test.png}
+    \includegraphics[width=0.6\textwidth]{Figures/hts221_test.png}
     \caption{Communication traffic log during HTS221TR sensor validation}
     \label{fig:hts221_test}
 \end{figure}
 
-\subsection{RS485 Communication Test  PC Side}
+\subsection{RS485 Communication Test}
+The RS485 communication was validated by connecting the STM32 test board to a PC via a serial terminal (COM6, 115200 bps) using a USB-to-RS485 adapter. The STM32 periodically transmitted sensor data over the RS485 bus, allowing real-time verification of correct data reception on the PC side.
 
-The RS485 link was tested  by connecting the test board to a PC 
-running the  serial terminal over COM6 at 115200 bps. The STM32 
-transmitted sensor data periodically over the RS485 bus and the PC terminal 
-was used to verify reception.
-
-Figure~\ref{fig:rs485_pc_test} shows the output on the PC side. After the 
-USART3 initialisation message and the RS485 node initialisation confirmation, 
-the board started transmitting temperature and humidity readings. The PC received 
-temperature and humidity values  
-
+Figure~\ref{fig:rs485_pc_test} shows the PC terminal output. After USART3 initialization and RS485 node startup, the system begins transmitting sensor data, which is successfully received and displayed, including temperature and humidity readings.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/rs485_pc_test.png}
+    \includegraphics[width=0.63\textwidth]{Figures/rs485_pc_test.png}
     \caption{RS485 reception output on the PC terminal (Termite 3.4)}
     \label{fig:rs485_pc_test}
 \end{figure}
 
-\subsection{RS485 Communication Test — STM32 Side}
+Validation was also performed directly on the STM32 side using the IAR EW Terminal IO interface. The logs confirm correct initialization and continuous transmission of sensor values, verifying proper RS485 operation in both transmit and receive modes.
 
-The same RS485 test was done  from the STM32 side using the 
-STM32CubeIDE debug terminal, to confirm that the microcontroller was correctly 
-handling both the transmission and the reception .
-
-Figure~\ref{fig:rs485_stm32_test} shows the STM32-side output. The sequence 
-starts with the same initialisation messages then logs each transmitted 
-temperature and humidity values . 
-meaning transmit and receive mode was working correctly. 
-
+Figure~\ref{fig:rs485_stm32_test} shows the corresponding STM32 output, where initialization messages are followed by periodic sensor data logs confirming correct communication behavior.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{Figures/rs485_stm32_test.png}
+    \includegraphics[width=0.62\textwidth]{Figures/rs485_stm32_test.png}
     \caption{RS485 transmission log on the STM32 debug terminal}
     \label{fig:rs485_stm32_test}
 \end{figure}
 
+\subsection{Modbus RTU Communication Test}
 
 \section{Conclusion}
