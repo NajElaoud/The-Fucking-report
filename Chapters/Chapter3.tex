@@ -152,53 +152,32 @@ Table \ref{tab:modbus_fc} summarizes the Modbus RTU function codes implemented i
 
 \subsubsection{CAN Manager}
 
-CAN frame reception is managed by a dedicated module that decouples the 
-asynchronous nature of CAN bus traffic from the periodic execution rhythm of 
-the Application layer. Because CAN frames can arrive at any time, independently 
-of the firmware's scheduling cycle, the manager introduces an intermediate 
-buffering stage between the BSP reception interface and the rest of the system. 
-Incoming frames are captured and held as they arrive; the Application layer then 
-retrieves and consumes them at its own cadence without any risk of frame loss 
-during burst traffic conditions. Once processed, the received data is written 
-into the CAN-related fields of the shared \texttt{SystemBoard} structure, making 
-it immediately available to any other module that consults the platform's central 
-data store.
+The CAN manager deliver a middle layer capturing frames as they arrive and storing them until the application layer retrieves them ensuring no frame is lost , making it immediately available to be processed and stored in the eeprom .          
+
 \subsubsection{EEPROM Manager}
 
-Non-volatile data persistence is managed by \texttt{EEPROM\_manager.c}, which 
-interfaces with the M95M01-RDW6TP serial EEPROM via the SPI BSP layer. The 
-manager exposes store and load primitives consumed by the Application layer to 
-persist the \texttt{DataFrame} structure across power cycles.
+The EEPROM Manager, implemented in \texttt{EEPROM\_manager.c} , uses the M95M01-RDW6TP serial EEPROM via the SPI BSP layer, creating a store and load fonctions that allow the Application layer to conserve the \texttt{DataFrame} structure across power cycles and prevent data loss .
 
 \subsection{Filter Manager}
 
-Industrial sensor signals are rarely clean: electrical interference, thermal 
-gradients, and inherent sensor noise introduce unwanted fluctuations into raw 
-measurements that, if left unprocessed, degrade the accuracy of the data 
-delivered to the application layer. To address this requirement without coupling 
-noise-reduction logic to individual sensor drivers, the IOBOX firmware provides a 
+Industrial sensor signals are exposed to  electrical interference, thermal 
+gradients, and inherent sensor noise introduce unwanted deviation into raw 
+measurements . 
+ if left unprocessed it will degrade the accuracy of the data delivered to the application layer. To solve this problem  the IOBOX firmware provides a 
 dedicated, generic signal processing module implemented in 
 \texttt{Filter\_Manager.c} and \texttt{Filter\_Manager.h}.
 
 
 
-The six filter algorithms provided by the module are described individually below.
+The seven filter algorithms provided by the module are described individually below.
 
 %------------------------------------------------------------------
 \subsubsection{Exponential Moving Average Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The Exponential Moving Average (EMA) is a low-pass filter designed to smooth 
-noisy sensor readings by weighting recent samples more heavily than older ones 
-while discarding neither.
-
-\paragraph{Principle.}
-Each output value is a weighted combination of the current raw input and the 
-previous filtered output. The weight assigned to the new sample is controlled 
-by a single configurable parameter, so the filter can be made to respond quickly 
-to real signal changes or to suppress short-lived noise spikes, depending on the 
-application.
+The Exponential Moving Average (EMA) is a low pass filter designed to smooth 
+noisy sensor readings by ensuring that all samples contribute to the analysis while giving more priority to recent observations.
 
 \paragraph{Main Equation.}
 \begin{equation}
@@ -207,48 +186,21 @@ application.
 \end{equation}
 
 \paragraph{Parameters.}
-$x[n]$ is the current raw sample, $y[n-1]$ is the previous filtered output 
-stored in \texttt{prev\_output}, and $\alpha \in (0,\,1]$ is the smoothing 
-factor: values near zero produce heavy smoothing with slow response, while values 
-near one allow fast tracking with minimal noise reduction.
+\begin{itemize}
+\item $x[n]$ is the current raw sample .
+\item $y[n-1]$ is the previous filtered output .
+\item $\alpha \in (0,\,1]$ is the smoothing factor.
+\end{itemize}
 
-
-\paragraph{Advantages.}
-The EMA requires only two floating-point multiplications and one addition per 
-update step, making it the least computationally demanding filter in the library. 
-Its constant memory footprint and the absence of a ring buffer make it directly 
-suitable for resource-constrained microcontrollers. The single parameter 
-\texttt{alpha} provides a simple and intuitive tuning knob.
-
-\paragraph{Disadvantages.}
-Because all past samples influence the output with exponentially decaying weights, 
-the EMA has no finite settling time after a large step change in the input: the 
-output approaches the new level asymptotically. Additionally, the degree of 
-smoothing depends implicitly on the sampling rate; if the rate changes, the 
-effective cutoff behaviour changes as well unless \texttt{alpha} is retuned.
-
-\paragraph{Use within the IOBOX.}
-The EMA is the recommended starting filter for continuous sensor channels such 
-as the temperature readings from the HTS221TR and ENS210 sensors, where 
-measurements arrive at a fixed 1000~ms period and the primary concern is 
-reducing high-frequency noise without introducing noticeable lag.
 
 %------------------------------------------------------------------
 \subsubsection{Simple Moving Average Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The Simple Moving Average (SMA) is a low-pass filter that smooths a signal by 
-computing the arithmetic mean of a fixed number of the most recent samples. 
-It is used when a consistent, equal-weighted average over a sliding observation 
-window is preferred over recursive weighting.
+The Simple Moving Average (SMA) is a low pass filter that stabilizes a signal by 
+calculating the arithmetic mean  of the most recent samples. 
 
-\paragraph{Principle.}
-A fixed-size window of recent samples is maintained in a circular ring buffer. 
-As each new sample arrives, it replaces the oldest value in the buffer and the 
-average is recomputed. A running sum is maintained so that the average requires 
-only a subtraction, an addition, and a division per update, rather than 
-recomputing the full sum from scratch.
 
 \paragraph{Main Equation.}
 \begin{equation}
@@ -257,44 +209,19 @@ recomputing the full sum from scratch.
 \end{equation}
 
 \paragraph{Parameters.}
-$N$ is the window size, configurable between 1 and \texttt{FILTER\_SMA\_MAX\_WINDOW} 
-(defined as 30 in \texttt{Filter\_Manager.h}). $x[n-k]$ represents the sample 
-collected $k$ steps before the current one.
-
-\paragraph{Advantages.}
-Each sample contributes equally to the output, which gives the SMA a more 
-predictable and uniform averaging behaviour than the EMA. The constant-time 
-update algorithm means that increasing the window size does not increase 
-computational cost per step.
-
-\paragraph{Disadvantages.}
-Memory consumption scales linearly with window size: a window of $N$ samples 
-requires $N$ floating-point values in the ring buffer, equivalent to $4N$ bytes. 
-The maximum window of 30 samples therefore consumes up to 120 bytes per instance. 
-The SMA also introduces a latency of $(N-1)/2$ samples before it fully reflects 
-a step change in the input.
-
-\paragraph{Use within the IOBOX.}
-The SMA is applicable to channels where equal weighting of historical samples is 
-required or where the averaging window has a direct physical meaning, such as 
-computing a one-minute average of lux readings from the OPT3001DNPR sensor by 
-setting $N$ equal to the number of 1000~ms samples in sixty seconds.
+\begin{itemize}
+\item $N$ is the window size. 
+\item $x[n-k]$ represents the sample collected . 
+\item $k$ steps before the current one.
+\end{itemize}
 
 %------------------------------------------------------------------
 \subsubsection{First-Order IIR High-Pass Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The first-order IIR high-pass filter removes slow-varying components and DC 
-offsets from a signal, retaining only its dynamic, rapidly changing parts. It 
-is used when baseline drift or long-term bias needs to be eliminated from a 
-sensor channel.
-
-\paragraph{Principle.}
-The filter computes each output as a scaled combination of the current 
-input-to-input difference and the previous output. A configurable 
-parameter $\alpha$ controls how aggressively the low-frequency content is 
-suppressed.
+The first order IIR high pass filter removes slowly changing signal components and static
+offsets from a signal keeping only its dynamic .
 
 \paragraph{Main Equation.}
 \begin{equation}
@@ -303,40 +230,19 @@ suppressed.
 \end{equation}
 
 \paragraph{Parameters.}
-$x[n]$ is the current input, $x[n-1]$ is the previous input stored in 
-\texttt{prev\_input}, $y[n-1]$ is the previous output stored in 
-\texttt{prev\_output}, and $\alpha \in (0,\,1]$ is the filter coefficient.
-
-\paragraph{Advantages.}
-The IIR high-pass filter is computationally inexpensive, requiring three 
-additions and one multiplication per update step. Its three-variable state makes 
-it one of the most memory-efficient options for baseline removal available in 
-the library.
-
-\paragraph{Disadvantages.}
-The output depends on both the current and past inputs and outputs, which means 
-the filter introduces a phase shift that varies with the rate of change of 
-the signal. This can make it less suitable for applications that require 
-time-accurate detection of transient events.
-
-\paragraph{Use within the IOBOX.}
-This filter is appropriate for removing slow thermal drift from temperature 
-sensor readings when only the rate of change or transient excursions are of 
-interest to the application, rather than absolute values.
-
+\begin{itemize}
+\item  $x[n]$ is the current input .
+\item  $x[n-1]$ is the previous input .
+\item  $y[n-1]$ is the previous output . 
+\item  $\alpha \in (0,\,1]$ is the filter coefficient.
+\end{itemize}
 %------------------------------------------------------------------
 \subsubsection{Simple Difference High-Pass Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The simple difference filter is the most basic high-pass operation available 
-in the library. It extracts the sample-to-sample variation of a signal, 
-effectively computing a discrete approximation of its rate of change.
-
-\paragraph{Principle.}
-Each output value is simply the difference between the current input sample 
-and the immediately preceding one. No configurable parameters are involved, 
-making this filter parameter-free and ready to use without any tuning.
+The simple difference filter is a high-pass filter .
+ It extracts the sample to sample variation of a signal and cumpute an approximation of its rate of change.
 
 \paragraph{Main Equation.}
 \begin{equation}
@@ -345,44 +251,18 @@ making this filter parameter-free and ready to use without any tuning.
 \end{equation}
 
 \paragraph{Parameters.}
-$x[n-1]$ is the previous raw input value, stored in the \texttt{prev\_input} 
-field of the \texttt{difference} sub-structure.
-
-\paragraph{Advantages.}
-The difference filter imposes the lowest possible computational and memory cost 
-of all filters in the library: one subtraction and one assignment per update, 
-with one floating-point state variable. It requires no configuration and is 
-immediately deployable on any sensor channel.
-
-\paragraph{Disadvantages.}
-Because it amplifies high-frequency components of the signal in proportion to 
-their frequency, the difference filter is sensitive to high-frequency noise. 
-It is appropriate only for channels that are already relatively clean or 
-pre-filtered, or for applications where noise spikes and true events can be 
-distinguished by magnitude.
-
-\paragraph{Use within the IOBOX.}
-The difference filter is suited to event detection on slowly sampled sensor 
-channels, such as detecting an abrupt change in ambient light measured by the 
-OPT3001DNPR, where a sudden illumination change produces a clearly distinguishable 
-output spike against a near-zero background.
-
+\begin{itemize}
+\item $x[n-1]$ is the previous input value . 
+\item $x[n]$ is the current input value . 
+\item $y[n]$ is the current output value . 
+\end{itemize}
 %------------------------------------------------------------------
-\subsubsection{SMA-Subtraction High-Pass Filter}
+\subsubsection{SMA Subtraction High-Pass Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The SMA-subtraction filter is a high-pass filter that isolates rapid signal 
-variations by removing the local moving average from each sample. It provides 
-baseline removal with the same ring-buffer mechanism used by the SMA low-pass 
-filter, yielding a complementary pair whose outputs sum exactly to the original 
-signal.
-
-\paragraph{Principle.}
-A sliding window moving average of the input is computed at each step using the 
-same efficient running-sum ring-buffer technique as the SMA low-pass filter. The 
-high-pass output is then obtained by subtracting this local average from the 
-current raw sample.
+The SMA subtraction filter is a high pass filter that extracts rapid signal 
+variations by removing the local average from each measuruments.
 
 \paragraph{Main Equation.}
 \begin{equation}
@@ -391,47 +271,18 @@ current raw sample.
 \end{equation}
 
 \paragraph{Parameters.}
-$N$ is the window size, subject to the same constraint as the SMA low-pass: 
-clamped to $[1,\,\texttt{FILTER\_SMA\_MAX\_WINDOW}]$.
-
-
-\paragraph{Advantages.}
-Because the high-pass output is derived by subtracting a low-pass output, the 
-signal is decomposed without any information loss: the two components always 
-reconstruct the original sample exactly. The window size parameter has a direct 
-and intuitive interpretation as the time span over which the local baseline is 
-estimated.
-
-\paragraph{Disadvantages.}
-Memory usage is identical to the SMA low-pass filter: up to 120 bytes per 
-instance at the maximum window size. The filter also introduces the same startup 
-transient as the SMA: during the first $N-1$ samples, the baseline estimate is 
-computed over fewer than $N$ values, which may cause the high-pass output to 
-be inaccurate until the buffer is filled.
-
-\paragraph{Use within the IOBOX.}
-This filter is well suited to separating short-duration illuminance events from 
-slowly evolving ambient light baselines on the OPT3001DNPR channel, or to 
-detecting rapid humidity transients against a slowly drifting background on 
-either of the two humidity sensor channels.
-
+\begin{itemize}
+\item $y[n]$ is the filtered output signal . 
+\item $x[n]$ is he current input signal .
+\item $N$ is the window size . 
+\item $k$ is the summation index .
+\end{itemize}
 %------------------------------------------------------------------
-\subsubsection{One-State Position Kalman Filter}
+\subsubsection{One State Position Kalman Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The one-state Kalman filter provides an optimal estimate of a slowly changing 
-scalar quantity by balancing the uncertainty in its own internal model against 
-the uncertainty in each new measurement. It adapts its smoothing behaviour 
-automatically over time, without requiring manual tuning of a fixed coefficient.
-
-\paragraph{Principle.}
-At each step, the filter first predicts how much its confidence in the current 
-estimate has degraded (the prediction step), then corrects the estimate using 
-the new measurement weighted by a dynamically computed gain (the update step). 
-The gain is large when the filter is uncertain and small when it is confident, 
-allowing it to track real changes quickly at startup and to suppress noise 
-efficiently at steady state.
+The one state Kalman filter provides a changing scalar quantity by combining model predictions with noisy measurements to improve accuracy.
 
 \paragraph{Main Equations.}
 \begin{align}
@@ -441,53 +292,21 @@ efficiently at steady state.
 \end{align}
 
 \paragraph{Parameters.}
-$Q$ is the process noise variance (\texttt{process\_variance}), reflecting how 
-much the true quantity is expected to vary between samples; $R$ is the 
-measurement noise variance (\texttt{measurement\_variance}), reflecting sensor 
-noise power; $\hat{x}$ is the current state estimate (\texttt{state\_estimate}); 
-$P$ is the estimation error covariance (\texttt{error\_covariance}); $z$ is the 
-new measurement; and $K$ is the Kalman gain computed at each step.
-
-
-\paragraph{Advantages.}
-The one-state Kalman filter adapts its smoothing level automatically: it applies 
-less smoothing early in a measurement session (when uncertainty is high) and 
-progressively more as confidence accumulates. This eliminates the need to choose 
-a fixed smoothing coefficient and makes the filter more robust to varying signal 
-conditions than either the EMA or SMA. Its memory footprint is fixed at four 
-floating-point variables regardless of operating conditions.
-
-\paragraph{Disadvantages.}
-The filter assumes that the true quantity changes only due to random, 
-zero-mean process noise (constant-position model). If the quantity exhibits a 
-systematic trend — such as a steadily rising temperature — the filter will lag 
-behind the true value, because the model does not account for a rate of change. 
-The two-state velocity filter described below addresses this limitation.
-
-\paragraph{Use within the IOBOX.}
-The position Kalman filter is the most suitable algorithm for the temperature 
-and humidity channels of the HTS221TR and ENS210 sensors under stable operating 
-conditions, where the physical environment changes slowly and randomly. It is 
-particularly appropriate in deployments where sensor noise characteristics 
-are known and $Q$ and $R$ can be set from datasheet specifications or 
-empirical characterisation.
-
+\begin{itemize}
+\item $Q$ is the process noise variance 
+\item $R$ is the measurement noise variance . 
+\item $\hat{x}$ is the current state estimate . 
+\item $P$ is the estimation error covariance .
+\item $z$ is the new measurement . 
+\item $K$ is the Kalman gain computed at each step.
+\end{itemize}
 %------------------------------------------------------------------
 \subsubsection{Two-State Constant-Velocity Kalman Filter}
 %------------------------------------------------------------------
 
 \paragraph{Purpose.}
-The two-state Kalman filter extends the position model by additionally tracking 
-the rate of change (velocity) of the measured quantity. It is designed for 
-signals that exhibit persistent trends rather than stationary fluctuations around 
-a fixed value.
-
-\paragraph{Principle.}
-The filter maintains a two-element state vector containing position and velocity. 
-At each step, the prediction phase advances the position estimate by the current 
-velocity estimate, then corrects both using the new measurement. The correction 
-is distributed between position and velocity through two separate gain values, 
-computed from a 2×2 covariance matrix that tracks the uncertainty in each state.
+The two-state Kalman filter improves the position model by additionally tracking 
+the rate of change (velocity) of the measured quantity.
 
 \paragraph{Main Equation.}
 The state prediction is:
@@ -498,52 +317,28 @@ The state prediction is:
     \begin{bmatrix} \hat{x}_{\text{pos}} \\ \hat{x}_{\text{vel}} \end{bmatrix}_{n-1}
     \label{eq:kalman2_predict}
 \end{equation}
-followed by a measurement-driven correction of both state components using 
-gains $K_{\text{pos}}$ and $K_{\text{vel}}$ computed from the updated 
-2×2 covariance matrix.
 
 \paragraph{Parameters.}
-The filter is configured with a diagonal 2×2 process noise matrix $\mathbf{Q}$ 
-(fields \texttt{process\_noise[0]} for position noise and \texttt{process\_noise[3]} 
-for velocity noise), a scalar measurement noise variance $R$ 
-(\texttt{measurement\_noise}), an initial state vector 
-\texttt{state[2]~=~[init\_pos, init\_vel]}, and a diagonal initial covariance 
-matrix with \texttt{init\_cov\_pos} and \texttt{init\_cov\_vel} on the diagonal. 
-Off-diagonal covariance terms are initialised to \texttt{0.0f}.
+\begin{itemize}
+    \item $\hat{x}_{\text{pos}}$: estimated position of the system.
+    \item $\hat{x}_{\text{vel}}$: estimated velocity of the system.
+    \item $\begin{bmatrix} \hat{x}_{\text{pos}} \\ \hat{x}_{\text{vel}} \end{bmatrix}$: state vector containing the estimated position and velocity.
+    \item $n$: current time step.
+    \item $n-1$: previous time step.
 
+\end{itemize}
 
-\paragraph{Advantages.}
-By explicitly tracking velocity, this filter anticipates trends in the signal 
-and tracks them with lower latency than the position-only model under equivalent 
-noise conditions. It is the most general-purpose filter in the library for 
-non-stationary signals.
-
-\paragraph{Disadvantages.}
-The two-state filter is the most computationally intensive in the library, 
-requiring the full expand of a 2×2 matrix predict–update cycle at each step. 
-It also requires more parameters to tune: both process noise terms and the 
-initial velocity estimate must be chosen appropriately. Memory usage amounts to 
-ten floating-point variables per instance (\texttt{state[2]}, 
-\texttt{covariance[4]}, \texttt{process\_noise[4]}, and 
-\texttt{measurement\_noise}).
-
-\paragraph{Use within the IOBOX.}
-This filter is appropriate for sensor channels that are expected to exhibit 
-systematic trends during normal operation, such as temperature measurements 
-taken during equipment warm-up or cool-down cycles, where the temperature rises 
-or falls at a measurable rate that the position-only model would fail to track 
-accurately.
 
 %------------------------------------------------------------------
 \subsubsection{Filter Manager: Architectural Summary}
 %------------------------------------------------------------------
-
-The Filter Manager provides the IOBOX firmware with a complete, self-contained 
-signal processing toolkit . 
-The choice of algorithm depends on the signal characteristics and the computational budget available: 
-the EMA and difference filters are the lightest options for high-rate channels, 
-while the Kalman filters offer adaptive, statistically grounded noise reduction 
-for channels where noise parameters can be characterised.
+The Filter Manager integrates seven algorithms covering the  
+signal processing needs within the IOBOX firmware. Low-pass filters (EMA, SMA) 
+ensure noise reduction and signal stabilization, while high-pass filters (IIR 
+High-Pass, Simple Difference, SMA Subtraction) extarcts rapid changes and remove 
+drift. Kalman filters improve measurement accuracy by combining sensor readings with model predictions .
+while the two-state version also estimates the rate of change of the measured quantity.
+the available filters offer a filtering effectiveness which allows the Application layer to use the most suitable solution for each signal.
 %------------------------------------------------------------------
 \subsection{Application Layer}
 %------------------------------------------------------------------
