@@ -1,0 +1,60 @@
+\clearpage
+%\chapter*{\centerline{\LARGE{General Introduction}}}
+\chapter*{{\emph\LARGE{General Conclusion and Perspectives}}}
+%\{General Introduction}
+\markboth{General Conclusion and Perspectives}{}
+\addcontentsline{toc}{chapter}{General Conclusion and Perspectives}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[HL]{General Conclusion and Perspectives}
+\cfoot{\thepage}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\lettrine[lines=2,loversize=0.1]{\textbf{\textit{T}}}his graduation project was carried out within Be Wireless Solutions as 
+part of the attainment of the National Engineering Diploma in Electronics 
+and Embedded Systems. 
+ work presented in this report addresses a concrete engineering challenge 
+faced by Be Wireless Solutions: the absence of a common, reusable firmware 
+base for industrial IoT deployments that previously required complete 
+redevelopment for each new hardware configuration. The IOBOX platform was 
+designed to eliminate that problem by providing a single, modular embedded 
+system capable of adapting to heterogeneous sensor and communication 
+environments without structural changes to the firmware.
+intended to serve as a shared and reusable base across future BWS deployments.
+
+
+Throughout this report, we presented the different phases of our work. We 
+began by establishing the general context of the project, introducing the 
+host company, its activities, and the industrial need that motivated this work. 
+We then defined the software architecture of the system, and explained the design choices that guided our 
+implementation.
+
+The development phase covered the construction of a layered firmware 
+structure, from low-level peripheral drivers up to the application logic. 
+We implemented sensor acquisition, industrial communication protocols, 
+signal processing, and data persistence, all organized within a clean and 
+extensible architecture. The platform was then subjected to a series of 
+hardware validation tests that confirmed the correct behavior of every 
+major component and interface on the target microcontroller.
+
+This project required several months of sustained work, combining embedded software development, protocol integration, and 
+systematic testing. It gave us the opportunity to face real engineering 
+challenges  from low-level driver debugging to architectural decisions 
+and to develop a deliverable that holds genuine industrial value for the company.
+
+Despite the results achieved in this first version, we believe that several 
+improvements and extensions could strengthen the platform further, and we 
+set them as perspectives:
+
+\begin{itemize}
+    \item Migrate from the cooperative scheduler to a lightweight real time 
+    operating system to better handle time critical tasks.
+    \item Extend the communication stack with support for additional 
+    industrial protocols such as Modbus TCP .
+    \item Add remote firmware update capability allowing system parameters 
+    and feature flags to be adjusted at runtime rather than at compile time.
+    \item Extend the platform with a secure communication layer, adding 
+    authentication and data encryption to meet industrial cybersecurity requirements.
+\end{itemize}
