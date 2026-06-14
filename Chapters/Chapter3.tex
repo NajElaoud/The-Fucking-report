@@ -14,18 +14,11 @@ In this chapter, we present the design and practical implementation of the IOBOX
 
 \section{Software Architecture}
 
-The firmware of the IOBOX platform follows a structured four-layer architecture. At the lowest level, the hardware abstraction layer (HAL) that provides direct communication with the hardware. Above it, the Board Support Package (BSP) handles board-specific configuration including bus initialization and public API. The third layer, a Manager layer encapsulating peripheral control and communication protocol logic, as a higher-level API. At the top, an application layer that implements the system's business logic and task management and execution. This strict architecture enforces a clear separation of the code layers ensuring that each layer can only interact with the APIs of the layer beneath it.
- A central 
-configuration file, \texttt{feature\_config.h}, governs the compile-time inclusion of 
-every hardware feature through preprocessor flags, ensuring that only the peripherals 
-and protocols required for a given deployment are compiled into the firmware binary.
+The firmware of the IOBOX platform follows a structured four-layer architecture. At the lowest level, the hardware abstraction layer (HAL) that provides direct communication with the hardware. Above it, the Board Support Package (BSP) handles board-specific configuration including bus initialization and public API. The third layer, a Manager layer encapsulating peripheral control and communication protocol logic, as a higher-level API. At the top, an application layer that implements the system's business logic and task management and execution. This strict architecture enforces a clear separation of the code layers ensuring that each layer can only access the APIs of the layer beneath it.
+ 
+To ensure that only the peripherals and protocols necessary for a particular deployment are compiled into the firmware binary, all hardware features are enabled at compile time using feature-enable macros defined in the application configuration file, \texttt{feature\_config.h}. These preprocessor flags control the inclusion of each hardware feature, allowing the firmware to be tailored to specific application requirements.
 
-A single global structure, \texttt{SystemBoard}, declared in 
-\texttt{feature\_config.h} and instantiated in \texttt{main.c}, serves as the shared 
-data exchange point between all layers. It aggregates real-time sensor readings, CAN 
-frame data, and status information, and is accessed directly by the Manager and 
-Application layers during each execution cycle.
-
+All application modules share a single global structure named \texttt{SystemBoard}, declared in \texttt{feature\_config.h}. Acting as a centralized data repository, it enables data exchange between modules in a blackboard-like manner, where each module updates its latest information and retrieves data produced by others. The structure consolidates real-time sensor measurements, CAN frame data, and system status information, and is accessed directly by the Manager and Application layers during each execution cycle.
 % --- Figure: layered software architecture diagram ---
 \begin{figure}[H]
     \centering
@@ -40,49 +33,36 @@ The following subsections will describe each layer in detail, from the lowest so
 \subsection{Board Support Package Layer}
 %------------------------------------------------------------------
 
-The Board Support Package constitutes the lowest layer of the firmware stack. It 
-provides a collection of peripheral driver modules, each encapsulating the 
-initialisation, configuration, and data transfer routines for a single hardware 
-interface. By confining all register-level and HAL-level operations to this layer, the 
-upper layers are shielded from hardware-specific details and can interact with 
-peripherals exclusively through the BSP's public API.
+At the bottom of the firmware stack lies the Board Support Package (BSP). The layer is organized into separate driver modules, each responsible for the initialization, configuration, and data transfer operations of a specific hardware interface. All register-level and HAL-level operations are confined to this layer, allowing the upper layers to remain independent of hardware-specific details and interact with peripherals exclusively through the BSP public API.
 
-Each BSP module follows a consistent structure: a header file located under 
-\texttt{BSP/Inc/} declares the public API, while the corresponding source file under 
-\texttt{BSP/Src/} contains the implementation. The platform exposes BSP modules for the 
-following peripheral categories.
+Each BSP module follows a consistent structure: a header file located under \texttt{BSP/Inc/} declares the public API, while the corresponding source file under \texttt{BSP/Src/} contains the implementation.
 
-Serial communication interfaces are covered by \texttt{BSP\_USART1}, 
-\texttt{BSP\_USART2}, \texttt{BSP\_UART5}, and \texttt{BSP\_LPUART1} for general-purpose 
-asynchronous communication, by \texttt{BSP\_RS485} for the half-duplex differential bus 
-used by the Modbus RTU stack, by \texttt{BSP\_LIN} for the single-wire LIN bus, and by 
-\texttt{BSP\_UART\_MUX} for the software-controlled UART channel multiplexer. 
-High-speed synchronous communication is handled by three independent SPI drivers: 
-\texttt{BSP\_SPI1}, \texttt{BSP\_SPI2}, and \texttt{BSP\_SPI4}. Sensor and 
-peripheral expansion buses are served by \texttt{BSP\_I2C2} and \texttt{BSP\_I2C3}, 
-complemented by \texttt{BSP\_I2C\_MUX}, which controls the TCA9548A eight-channel I\textsuperscript{2}C 
-multiplexer. The CAN interface is abstracted by \texttt{CAN1\_BSP}, and digital 
-input/output operations are centralised in \texttt{BSP\_DigitalIO}.
+The platform exposes BSP modules for the following peripheral categories:
 
-Analog peripherals are equally covered: four ADC drivers (\texttt{ADC1\_BSP}, 
-\texttt{ADC3\_BSP}, \texttt{ADC4\_BSP}, \texttt{ADC5\_BSP}) expose acquisition 
-functions for each active conversion channel, while two DAC drivers 
-(\texttt{BSP\_DAC1} and \texttt{BSP\_DAC2}) provide voltage output generation. 
-Four timer drivers (\texttt{TIM1\_BSP} through \texttt{TIM4\_BSP}) manage 
-time-base and PWM generation. A low-power management module, \texttt{BSP\_LowPower}, 
-groups the power mode transition routines.
+\begin{itemize}
+    \item For serial communication, \texttt{BSP\_RS485} implements the half-duplex differential bus used by Modbus RTU; \texttt{BSP\_LIN} handles the single-wire LIN bus; \texttt{BSP\_USART1}, \texttt{BSP\_USART2}, \texttt{BSP\_UART5}, and \texttt{BSP\_LPUART1} provide general-purpose asynchronous communication; and \texttt{BSP\_UART\_MUX} manages the software-controlled UART channel multiplexer.
 
-This modular decomposition means that porting the firmware to a different STM32 
-variant requires changes only within the BSP layer, leaving the Manager and 
-Application layers unmodified.
+    \item High-speed synchronous communication is handled by three SPI drivers: \texttt{BSP\_SPI1}, \texttt{BSP\_SPI2}, and \texttt{BSP\_SPI4}. Sensor and peripheral expansion buses rely on \texttt{BSP\_I2C2} and \texttt{BSP\_I2C3}, complemented by \texttt{BSP\_I2C\_MUX}, which controls the TCA9548A eight-channel I\textsuperscript{2}C multiplexer.
+
+    \item The CAN interface is abstracted through \texttt{CAN1\_BSP}, while digital input/output functionality is provided by \texttt{BSP\_DigitalIO}.
+
+    \item Analog functionality is split between ADC and DAC drivers. Four ADC modules (\texttt{ADC1\_BSP}, \texttt{ADC3\_BSP}, \texttt{ADC4\_BSP}, and \texttt{ADC5\_BSP}) expose acquisition functions for active conversion channels, while \texttt{BSP\_DAC1} and \texttt{BSP\_DAC2} provide analog voltage generation.
+
+    \item Four timer drivers (\texttt{TIM1\_BSP} through \texttt{TIM4\_BSP}) manage time-base generation and PWM functionality.
+
+    \item A dedicated low-power management module, \texttt{BSP\_LowPower}, groups the routines responsible for power mode transitions.
+\end{itemize}
+
+This organization simplifies platform migration. When porting the firmware to another STM32 family, most hardware-dependent modifications remain confined to the BSP layer, while the Manager and Application layers can generally be reused without significant changes.
 
 %------------------------------------------------------------------
 \subsection{Manager Layer}
 %------------------------------------------------------------------
 Three sensor manager modules were developed, one per physical sensor, each
 handling I\textsuperscript{2}C multiplexer channel selection, register-level communication, and
-raw-to-physical conversion.
+raw-to-physical value conversion.
 
+\subsubsection{HTS221TR Manager}
 The HTS221TR manager drives the STMicroelectronics capacitive humidity and
 temperature sensor connected to I\textsuperscript{2}C multiplexer channel 0.  Subsequent acquisitions apply linear interpolation between
 these reference points to convert the 16-bit raw ADC output into calibrated
@@ -108,8 +88,9 @@ acquisition. If the data-ready flag is not asserted within a configurable retry
 count, the acquisition routine returns a timeout status without blocking the
 system further.
 
-The ENS210 manager interfaces with the ScioSense combined temperature and
-humidity sensor on multiplexer channel~2. The module operates in single-shot
+\subsubsection{ENS210 Manager}
+The ENS210 manager interfaces with the sensors combined temperature and
+humidity measurements on multiplexer channel~2. The module operates in single-shot
 mode: a measurement is triggered by writing to the sensor's start register, a
 fixed 10-millisecond settling delay is applied, and the 16-bit raw temperature
 and humidity registers are then read. Conversion follows the datasheet-specified
@@ -117,6 +98,7 @@ formulae: temperature is obtained as $T_K = \mathrm{raw}/64$, then converted to
 Celsius by subtracting 273.15; relative humidity is obtained as
 $\%\mathrm{RH} = \mathrm{raw}/512$.
 
+\subsubsection{OPT3001DNPR Manager}
 The OPT3001DNPR manager drives the Texas Instruments ambient light sensor on
 multiplexer channel~1. The sensor is configured at initialisation by writing a
 control word to its configuration register, selecting continuous conversion mode,
@@ -131,14 +113,42 @@ sensors sharing the same physical I\textsuperscript{2}C bus.
 
 \subsubsection{Modbus RTU Manager}
 
-The Modbus RTU stack provides both master and slave roles over the RS485 physical
+The Modbus RTU manager provides both master and slave roles over the RS485 physical
 layer and is entirely self-contained within a single manager module. 
-The slave role, which is active in the current platform configuration, operates through
-interrupt-driven reception. Eight function codes are supported: FC01, FC02, FC03,
-FC04, FC05, FC06, FC15, and FC16. Frames addressed to other slaves are silently
-discarded; frames with invalid CRC are dropped without response, as required by the
-Modbus RTU specification. Following each handled frame, the receiver is re-armed
-immediately to avoid missing subsequent requests.
+In the current platform configuration, only slave mode is active which relies on
+interrupt-driven reception to process incoming requests. Eight function codes are supported: FC01 to FC06, FC15 and FC16. 
+Frames addressed to wrong slave addresses are silently discarded, frames with invalid CRC are dropped without response, according to the
+Modbus RTU specification. Following each processed request, the receiver is immediately re-armed
+to avoid missing subsequent requests.
+
+Table \ref{tab:modbus_fc} summarizes the Modbus RTU function codes implemented in the system, covering both coil and register-level read/write operations used by the slave device.
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{|c|l|p{7cm}|}
+    \hline
+    \textbf{Function Code} & \textbf{Name} & \textbf{Description} \\
+    \hline
+    FC01 & Read Coils & Reads the ON/OFF status of discrete output coils from the slave device. \\
+    \hline
+    FC02 & Read Discrete Inputs & Reads the status of discrete input contacts from the slave device. \\
+    \hline
+    FC03 & Read Holding Registers & Reads one or more 16-bit holding registers used for general-purpose data storage. \\
+    \hline
+    FC04 & Read Input Registers & Reads 16-bit input registers representing analog or measured data. \\
+    \hline
+    FC05 & Write Single Coil & Writes a single ON/OFF value to a discrete output coil. \\
+    \hline
+    FC06 & Write Single Register & Writes a single 16-bit value to a holding register. \\
+    \hline
+    FC15 & Write Multiple Coils & Writes multiple ON/OFF values to consecutive output coils in a single request. \\
+    \hline
+    FC16 & Write Multiple Registers & Writes multiple 16-bit values to consecutive holding registers. \\
+    \hline
+    \end{tabular}
+    \caption{Modbus RTU Function Codes Used in the System}
+    \label{tab:modbus_fc}
+\end{table}
 
 \subsubsection{CAN Manager}
 
