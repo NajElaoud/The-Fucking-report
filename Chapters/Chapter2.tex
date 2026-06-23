@@ -20,15 +20,13 @@ The use of a modular architecture allowed the integration of different types of 
 
 %__Part 2 of Chapter 2: General concept and system components
 \section{IOBOX Hardware architecture}
-The IOBOX platform provides a set of analog, digital, and mixed-signal I/O resources. It includes four analog input channels connected to the ADC peripherals and seven digital inputs. On the output side, the device offers seven digital outputs, four PWM channels for actuator control, and DAC-based outputs capable of generating industrial 4--20~mA current signals. This enables direct interaction with industrial control and monitoring systems.
+The IOBOX platform provides a set of analog, digital, and mixed-signal I/O resources. It includes four analog input channels connected to the ADC peripherals and seven digital inputs. On the output side, the device offers seven digital outputs, four PWM channels for actuator control, and DAC-based outputs capable of generating industrial 4--20~mA current signals allowing direct interaction with industrial control and monitoring systems.
 
-The platform supports multiple communication interfaces, ensuring compatibility with industrial and IoT environments. These include USB for data exchange, SPI for high-speed communication, and I\textsuperscript{2}C buses for sensor integration and peripheral expansion. Industrial connectivity is implemented through dedicated transceivers: TCAN330GD for CAN FD, TJA1020 for LIN, and THVD1410 for RS485, enabling robust long-distance communication and Modbus RTU support.
+The IOBOX supports multiple communication interfaces also to ensure compatibility with industrial and IoT environments, including USB for data exchange, SPI for high-speed communication and I2C buses for sensor integration and peripheral expansion. Industrial connectivity is handled through the following transceivers: the TCAN330GD for CAN FD, the TJA1020 for LIN and the THVD1410 for RS485 for a robust long-distance communication and support of Modbus RTU.
 
-To enhance communication flexibility, the architecture integrates a TCA9548A I\textsuperscript{2}C multiplexer, expanding a single I\textsuperscript{2}C bus into eight independent channels. In addition, a PCF8574 I/O expander drives CD74HC4051 multiplexers, allowing selection among multiple UART channels while minimizing the number of required microcontroller pins.
+For a more flexible communication, we added the TCA9548A I\textsuperscript{2}C multiplexer that expands a single I\textsuperscript{2}C bus into eight independent channels and the PCF8574 I/O expander to drive the CD74HC4051 multiplexers for UART communication which allows us to select from multiple UART channels using the same UART bus.    
 
-All interfaces are routed to external connectors, simplifying integration with sensors, actuators, and industrial equipment. This modular architecture ensures scalability for automation, monitoring, data acquisition, and IoT applications, while allowing future hardware and software extensions.
-
-As illustrated in Figure~\ref{fig:synoptic_architecture}, the overall architecture of the IOBOX platform is centered on the STM32G474MBTx microcontroller, which manages data acquisition, processing, communication, and control tasks.
+Figure~\ref{fig:synoptic_architecture} shows the overall architecture of the IOBOX platform that is centered on the STM32G474MBTx microcontroller.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{Figures/schema_synoptique.png}
@@ -561,14 +559,13 @@ In practice, CAN uses two differential lines, CAN\_H and CAN\_L, to transmit dat
 \nobreak{}
 Local Interconnect Network (LIN) is a low-cost serial communication protocol designed for distributed control systems, particularly in automotive applications. It operates on a single-wire physical layer and follows a strict master-slave architecture where the master node controls the entire bus communication schedule.
 
-Unlike event-driven protocols, LIN is time-triggered, meaning communication is organized into predefined frames sent at fixed intervals. Each frame consists of a header transmitted by the master and a response transmitted by a slave node. The header includes a break field (used to signal the start of a frame), a synchronization byte, and an identifier field that determines which node should respond.
+Unlike event-driven protocols, LIN is time-triggered which means communication is organized into predefined frames sent at fixed intervals. Each frame consists of a header transmitted by the master and a response transmitted by a slave node. The header includes a break field (used to signal the start of a frame), a synchronization byte, and an identifier field that determines which node should respond.
 
 The data response typically contains up to 8 bytes, followed by a checksum used for error detection. LIN achieves deterministic timing by enforcing strict scheduling, making it suitable for non-critical but predictable control tasks.
 
-In this project, LIN communication is implemented using the STM32 UART peripheral configured in LIN mode. The hardware support simplifies break detection and synchronization field handling, reducing software complexity. The system can therefore reliably detect frame boundaries and process incoming data with minimal CPU overhead.
+LIN communication was implemented using the UART peripheral configured in LIN mode. The hardware support simplifies break detection and synchronization field handling, reducing software complexity. The system can therefore reliably detect frame boundaries and process incoming data with minimal CPU overhead.
 
-The LIN frame structure is shown in Figure~\ref{fig:lin_frame}.
-
+Figure~\ref{fig:lin_frame} shows the LIN frame structure.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{Figures/lin_frame.png}
@@ -579,9 +576,9 @@ The LIN frame structure is shown in Figure~\ref{fig:lin_frame}.
 \section{Software tools}
 
 \subsection{Visual Studio Code}
-Visual Studio Code (VS Code) is a lightweight yet powerful source code editor optimized for modern software development. It supports multiple programming languages and provides advanced features such as syntax highlighting, intelligent code completion, and debugging tools\cite{vscode}.
+Visual Studio Code (VS Code) is a free, lightweight source code editor develpoed by Microsoft, supporting multiple programming languages and providing fully customizable features such as Git integration, integrated terminal and debugging tools\cite{vscode}.
 
-In this project, Visual Studio Code was used as the primary text editor for documentation, script editing, and Git-based version control. Extensions such as Git Graph enabled visualization of commit history, branch management, and tracking of code evolution across the development team.
+In this project, VS Code was used for documentation and Git repository version control using Git Graph extension for a clear visualization of commit history, branch management, and tracking of code changes across the project's development.
 
 \begin{figure}[H]
     \centering
@@ -591,7 +588,7 @@ In this project, Visual Studio Code was used as the primary text editor for docu
 \end{figure}
 
 \subsection{IAR Embedded Workbench}
-IAR Embedded Workbench (IAR EW) is a professional integrated development environment (IDE) dedicated to embedded systems programming, particularly for microcontrollers such as the STM32 family. It provides a highly optimized C/C++ compiler, advanced debugging capabilities, and efficient project management tools\cite{iar_ew}. 
+IAR Embedded Workbench (IAR EW) offers a fully integrated development environment (IDE) with highly optimized C/C++ compiler, advanced debugging capabilities, and efficient project management tools, eliminating the need for multiple third-party tools\cite{iar_ew}. 
 
 In this project, IAR EW was used for firmware development, compilation, and debugging. Its powerful optimization features contributed to generating efficient and reliable embedded code, which is critical for real-time applications and resource-constrained systems.
 
