@@ -636,9 +636,9 @@ Contains the measurement values and communication data collected during the most
 A 16-bit CRC computed over all preceding fields using the CRC-16/IBM polynomial. The receiver validates it before processing the data; any mismatch indicates corruption and causes the frame to be discarded.
 
 \paragraph{End Byte:}
-A fixed end of message marker (\texttt{0x55}) providing an additional frame boundary check. Combined with the Start Byte, it helps detect framing errors caused by issues such as a corrupted Length field, even when CRC validation alone may not catch misalignment.
+A fixed end of message marker (\texttt{0x55}) providing an additional frame boundary check. Together with the Start Byte, it helps detect framing errors caused by a corrupted Length field, even when CRC validation alone wouldn't catch misalignment.
 
-The complete field layout is summarised in Table~\ref{tab:ioframe_fields}.
+Table~\ref{tab:ioframe_fields} summarises the complete custom frame field layout.
 \begin{table}[H]
     \centering
     \caption{IoFrame field summary}
@@ -666,8 +666,8 @@ The complete field layout is summarised in Table~\ref{tab:ioframe_fields}.
     \end{tabular}
 \end{table}
 
-The frame assembly routine retrieves the last persisted system state and fills 
-every field sequentially before computing and inserting the CRC. This design 
+The frame assembly routine first retrieves the last persisted system state, then fills 
+every field sequentially before calculating and inserting the CRC. This design 
 ensures that the output frame always reflects the most recently stored platform 
 state, providing continuity across power cycles and making the frame contents 
 auditable through the non-volatile storage layer.
@@ -779,6 +779,7 @@ the conversion gave physically corrected numbers.
     \caption{ENS210 humidity readings during ambient and induced humidity test}
     \label{fig:ens210_test}
 \end{figure}
+
 \subsection{ENS210 Temperature Validation}
 
 The temperature output of the ENS210 was verified alongside the humidity test, 
@@ -862,7 +863,7 @@ Figure~\ref{fig:rs485_stm32_test} shows the corresponding STM32 output, where in
 
 The Modbus RTU slave implementation was validated using a PC-based Modbus master simulator (Modbus Poll) connected to the STM32 through an RS485 transceiver. The validation covered both read and write transactions in order to verify correct protocol decoding, data routing, and response generation. The results confirmed that the STM32 correctly interprets incoming Modbus RTU frames, updates the associated internal \texttt{Sysboard} data structure, and returns properly formatted responses compliant with the Modbus specification.
 
-Figure~\ref{fig:modbus_ui} shows the main Modbus Poll interface used to establish communication with the STM32 slave. It provides the overall test environment where requests are initiated, responses are monitored, and communication status is continuously observed.
+Figure~\ref{fig:modbus_ui} shows the main Modbus Poll interface used to establish communication with the STM32 slave, providing the overall test environment to initiate requests, monitor responses, and observe communication status continuously.
 
 \begin{figure}[H]
     \centering
@@ -871,7 +872,7 @@ Figure~\ref{fig:modbus_ui} shows the main Modbus Poll interface used to establis
     \label{fig:modbus_ui}
 \end{figure}
 
-Figure~\ref{fig:modbus_config} presents the detailed configuration of the Modbus request used during the test. The setup defines slave ID 1, starting register address 0, and a quantity of 5 registers using function code \texttt{FC04 (Read Input Registers)}, ensuring that multiple consecutive input registers are read in a single transaction.
+Figure~\ref{fig:modbus_config} shows the detailed configuration of the Modbus master request used during the test. The setup defines slave ID 1, starting register address 0, and a quantity of 5 registers using function code \texttt{FC04 (Read Input Registers)}, ensuring that multiple consecutive input registers are read in a single transaction.
 
 \begin{figure}[H]
     \centering
