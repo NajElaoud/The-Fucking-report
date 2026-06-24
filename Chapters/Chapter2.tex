@@ -37,11 +37,8 @@ Figure~\ref{fig:synoptic_architecture} shows the overall architecture of the IOB
 \clearpage
 \section{Hardware components}
 
-\subsection{STM32G474MBTx Microcontroller}
-At the heart of the IO‑Box hardware architecture lies the STM32G474 microcontroller,
-a high‑performance device from STMicroelectronics. It is based on the ARM Cortex‑M4
-core with floating‑point unit (FPU), making it particularly well‑suited for real‑time signal
-processing and control applications.
+\subsection{STM32G4 Microcontroller}
+At the heart of the IOBOX lies the STM32G474MBTx microcontroller from STMicroelectronics based on the high‑performance ARM Cortex‑M4 core with making it particularly well‑suited for real‑time signal processing and control applications.   
 
 \begin{figure}[H]
     \centering
@@ -50,8 +47,7 @@ processing and control applications.
     \label{fig:stm32_chip}
 \end{figure}
 
-The STM32G474 was preferred over the STM32F4 series due to its higher ADC count (five independent ADC units versus two on the F4), its native FDCAN peripheral, and its more modern HAL ecosystem. Compared to the STM32L4 series, the G474 offers higher clock speed (170 MHz versus 80 MHz) and a richer analog front end, which are necessary for real-time signal processing at the required sampling rates.
-
+The STM32G474 was selected because it provides all the necessary communication protocol interfaces and peripherals that we needed in this project, like the high ADC channel count (five independent ADC units versus two on the F4), its native FDCAN peripheral and its modern HAL ecosystem. Compared to the STM32L4 series, the STM32G474 offers higher clock speed (170 MHz versus 80 MHz) which is necessary for real-time signal processing.
 \begin{table}[H]
     \centering
     \caption{Product Attributes — STM32G474 Microcontroller}
@@ -93,10 +89,9 @@ The STM32G474 was preferred over the STM32F4 series due to its higher ADC count 
     \end{tabular}
 \end{table}
 
-Within the IOBOX, the STM32G474 acts as the central processing unit, coordinating
-signal acquisition, local data processing, and actuator control. It also supervises
-communication with external systems through multiple industrial protocols, making it a
-key enabler of the project’s objectives.
+Within the IOBOX, the STM32G474 acts as the main processing unit for coordinating
+signal acquisition, processing data and controlling actuators  as well as supervising
+communication with external systems via various industrial protocols.    
 
 \subsection{EEPROM Memory: M95M01-RDW6TP}
  
@@ -142,7 +137,7 @@ The M95M01-RDW6TP EEPROM is a 1 Mbit device that operates on the principle of 13
 
 \subsection{Sensors}
 
-In the IOBOX project, several sensors were integrated to enable environmental and physical measurements. Our work focused not only on interfacing these sensors with the STM32G474 microcontroller, but also on configuring their registers, managing communication protocols, and performing calibration to ensure accurate data acquisition. Each sensor was studied in detail, and its characteristics were documented to highlight its role within the system.
+In this project, we integrated various sensors used for environmental and physical measurements in which our work focused not only on interfacing these sensors with the STM32G474 microcontroller but also on configuring their registers, managing communication protocols and calibrating each one for accurate data acquisition.
 
 \subsubsection{ENS210 Sensor}
 
@@ -226,9 +221,9 @@ During the development of the current project, integration with the OPT3001DNPR 
 
 \subsubsection{HTS221TR Sensor}
 
-The HTS221TR is a capacitive digital humidity and temperature sensor developed by STMicroelectronics. It integrates sensing elements and signal conditioning circuitry within a compact package, providing calibrated measurements through a standard I\textsuperscript{2}C interface. The sensor is designed for low-power applications while maintaining good measurement accuracy, making it suitable for environmental monitoring and industrial IoT systems.
+The HTS221TR is a capacitive digital sensor for relative humidity and temperature made by STMicroelectronics, that integrates sensing elements and circuitry for signal conditioning within its small package and gives calibrated measurement output values using the standard I2C interface. This sensor was designed for low-power applications while maintaining accurate measurement making it the best choice for environmental data monitoring.
 
-Within the IOBOX platform, the HTS221TR is used to acquire ambient temperature and relative humidity data. Its factory-calibrated coefficients simplify integration and improve measurement reliability. Communication with the STM32G474 microcontroller is achieved through the I\textsuperscript{2}C bus, and dedicated software drivers were developed to configure the device and process sensor data.
+In this project, the HTS221TR is used to acquire ambient temperature and relative humidity data using its factory-calibrated coefficients to improve measurement reliability. Communication with the STM32G474 microcontroller is achieved through the I\textsuperscript{2}C bus, and dedicated software drivers were developed to configure the device and process sensor data.
 
 \begin{table}[H]
     \centering
@@ -305,14 +300,13 @@ OS Compatibility                  & Windows, Linux, macOS                 \\ \hl
 \section{Peripherals}
 
 \subsection{Digital-to-Analog Converter (DAC)}
-The Digital-to-Analog Converter (DAC) is an analog output peripheral integrated within the STM32G474MBTx microcontroller. It converts digital values stored in memory into continuous analog voltage levels with a resolution defined by the DAC bit width. This allows the generation of precise voltage references or analog waveforms such as sine waves, ramps, or arbitrary signals.
+The Digital-to-Analog Converter (DAC) is one of the analog output peripherals built into the STM32G4 microcontroller. Basically it allows converting digital values stored in memory into an analog voltage. The resolution is defined by the DAC bit width which allows the generation of precise voltage references or analog waveforms.
 
-The DAC can operate in several modes, including software-triggered mode, timer-triggered mode, and DMA-driven mode. In timer-triggered mode, a hardware timer periodically updates the DAC output, ensuring precise and deterministic signal timing. When combined with Direct Memory Access (DMA), the DAC can continuously output precomputed waveform data without CPU intervention, significantly improving efficiency.
+The DAC can operate in three main modes: software-triggered mode, timer-triggered mode and DMA-driven mode. In timer-triggered mode, a hardware timer periodically updates the DAC output which keeps the timing consistent. And using the DMA mode reduced the MCU's need to intervene when outputting DAC values which frees it up for other tasks and significantly improving efficiency.
 
-In the IOBox platform, the DAC is used to generate analog reference signals for actuator control. Two DAC channels are available, supporting both software-triggered and timer-triggered output modes. 
+The DAC is used to generate analog reference signals to control actuators and in this project we used two DAC channels that supports software-triggered and timer-triggered output modes.              
 
-An example of DAC signal generation is illustrated in Figure~\ref{fig:dac_waveform}.
-
+Figure~\ref{fig:dac_waveform} shows an example of DAC signal generation.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.65\textwidth]{Figures/dac_waveform.png}
@@ -323,8 +317,11 @@ An example of DAC signal generation is illustrated in Figure~\ref{fig:dac_wavefo
 \subsection{Analog to Digital Converter (ADC)}
 
 Analog-to-Digital Converters (ADCs) represent one of the key peripherals in embedded systems, which convert analog continuous-time signals into discrete digital equivalents for further processing by the microcontroller. Such conversions are critical for sensing and analyzing physical phenomena such as temperature, pressure, and current.
-In the IOBox project, ADCs serve for acquisition of sensor readings and data from additional modules connected to the system. The STM32G474 MCU features several ADC channels, providing simultaneous sampling of various inputs. This feature proves useful when handling multiple simultaneous signals typical of industrial use cases.
+
+In the IOBOX project, ADCs serve for acquisition of sensor readings and data from additional modules connected to the system. The STM32G474 MCU features several ADC channels, providing simultaneous sampling of various inputs. This feature proves useful when handling multiple simultaneous signals typical of industrial use cases.
+
 ADC operation involves a sequence of steps performed for each conversion cycle. Firstly, the analog signal is sampled periodically based on the sampling frequency. Next, each sample point is converted to a corresponding digital representation using the ADC resolution (e.g., 12-bit and 16-bit). Thus obtained digital word corresponds to the amplitude of the input analog signal at that moment in time. The overall conversion accuracy largely depends on parameters such as resolution, sampling frequency, and stability of the reference voltage.
+
 Key properties of ADCs include:
 \begin{itemize}
     \item \textbf{Resolution}:  defined by the amount of discrete levels supported. 
@@ -428,21 +425,19 @@ Four different operational modes are available with SPI communication, designate
 \end{figure}
 
 \subsection{UART Protocol}
-Universal Asynchronous Receiver-Transmitter (UART) is an asynchronous serial communication protocol that enables full-duplex data exchange between devices without a shared clock signal. Data is transmitted over two lines: Transmit (TX) and Receive (RX). Synchronization between devices is achieved by configuring identical communication parameters, including baud rate, data bits, parity, and stop bits.
+UART is an asynchronous full-duplex serial communication protocol used to exchange data between devices without the need for a shared clock signal. Data is transmitted over two lines: Transmit (TX) and Receive (RX)  and sometimes labeled as TXD and RXD depending on the datasheet. Synchronizing between devices by configuring identical communication parameters like baud rate, number of data bits, parity bit setting and stop bit configuration.
 
-Each data frame typically consists of a start bit, followed by a configurable number of data bits (usually 8), an optional parity bit for error detection, and one or more stop bits. Unlike synchronous protocols, UART does not include a clock line, making it simpler but more sensitive to timing mismatches.
+Each data frame typically consists of a start bit (always low), followed by a configurable number of data bits (8 in our case), an optional parity bit for error detection and one or sometimes two stop bits.  UART has no clock line which keeps the hardware simple, but, it also means both sides have to already agree on the same baud rate beforehand, otherwise, if they drift even slightly, the bits  will get misread.
 
-In this project, UART is used for communication between the STM32 microcontroller and external systems such as a host computer or other embedded modules. It plays a key role in debugging, logging, and real-time data exchange. The implementation uses the STM32 HAL drivers with support for interrupt-driven and DMA-based transmission to ensure efficient and non-blocking communication. Error handling mechanisms, including overrun, framing, and noise errors, are also considered to improve communication reliability.
+UART is used to communicate between the STM32 microcontroller and external systems such as a host computer or other embedded modules. It plays a key role in debugging, logging, and real-time data exchange. The implementation uses the STM32 HAL drivers with support for interrupt-driven and DMA-based transmission to ensure efficient and non-blocking communication. Error handling mechanisms, including overrun, framing, and noise errors, are also considered to improve communication reliability.
 
-The UART frame structure is illustrated in Figure~\ref{fig:uart_frame}.
-
-\begin{figure}[h]
+Figure~\ref{fig:uart_frame} shows the UART frame structure.
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{Figures/uart_frame.png}
 \caption{UART frame format}
 \label{fig:uart_frame}
 \end{figure}
-
 
 \subsection{RS485 Communication}
 RS485 is a robust differential serial communication standard widely used in industrial environments due to its high noise immunity and long-distance capabilities. Unlike single-ended UART communication, RS485 transmits data over a differential pair of lines (A and B), where the information is encoded as a voltage difference between the two conductors. This approach significantly reduces susceptibility to electromagnetic interference and ground potential differences.
@@ -454,7 +449,6 @@ In this project, RS485 serves as the physical layer for Modbus RTU communication
 Before transmission, the microcontroller sets the DE pin high to enable the driver stage. After sending the data frame, the DE pin is reset to return the transceiver to reception mode. This timing control is critical to avoid bus contention. The communication is typically used for reliable data exchange in noisy environments, especially when longer cable lengths are required compared to standard UART.
 
 Figure~\ref{fig:rs485_bus} illustrates a typical RS485 bus configuration.
-
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.65\textwidth]{Figures/rs485_bus.png}
@@ -472,8 +466,7 @@ In the IOBOX project, Modbus RTU is implemented over the RS485 physical layer to
 
 In this project, the IOBox operates as a Modbus RTU slave at address 0x01, communicating over RS485 at 19,200 bps. The slave implementation supports function codes FC01 through FC06, FC15, and FC16. Input registers expose real-time sensor measurements (temperature, humidity, illuminance) to any connected Modbus master, and holding registers allow actuator control. The implementation details are described in Chapter 3.
 
-A Modbus RTU frame consists of four main fields:
-
+The Modbus RTU frame consists of four main fields:
 \begin{itemize}
     \item \textbf{Slave Address}: Identifies the target device.
     \item \textbf{Function Code}: Specifies the requested operation.
@@ -488,7 +481,7 @@ A Modbus RTU frame consists of four main fields:
     \label{fig:modbus_frame}
 \end{figure}
 
-To ensure compatibility with standard industrial devices, the implementation supports a subset of Modbus function codes, classified according to their role in data access and control:
+To make sure that the implementation is compatible with standard industrial devices, the implementation supports a subset of Modbus function codes, classified according to their role in data access and control:
 
 \begin{table}[H]
     \centering
