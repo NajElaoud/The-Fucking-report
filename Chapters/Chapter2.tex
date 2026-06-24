@@ -99,10 +99,10 @@ communication with external systems through multiple industrial protocols, makin
 key enabler of the project’s objectives.
 
 \subsection{EEPROM Memory: M95M01-RDW6TP}
+ 
+The IOBOX is equipped with an external EEPROM memory (M95M01-RDW6TP) that comes from STMicroelectronics . This device allows storing the necessary parameters, as well as calibration and logging data for system operation without losing data during power cycling operations.
 
-To complement the STM32 microcontroller and ensure reliable data storage, the IOBOX integrates an external EEPROM memory, specifically the M95M01‑RDW6TP from STMicroelectronics. This device provides non‑volatile storage for configuration parameters, calibration data, and system logs, allowing the platform to retain critical information even after power cycles.
-
-The M95M01‑RDW6TP is a 1‑Mbit serial EEPROM organized as 131,072 × 8 bits. It features a fast access time of 25 ns and communicates via the SPI bus, ensuring efficient integration with the STM32G474. Packaged in an 8‑pin SOIC format, it offers a compact solution suitable for embedded applications. Its endurance of up to one million write cycles and data retention of 40 years make it a robust choice for industrial environments where reliability is essential.
+The M95M01-RDW6TP EEPROM is a 1 Mbit device that operates on the principle of 131,072 × 8 bits . With a speed of 25 ns, and the communication interface is the SPI bus. It makes an easy integration with STM32G474 .  Packaged in an 8 pin SOIC . it provides one milion write cycles , and a period of 40 years of data retention .
 
 \begin{table}[H]
     \centering
@@ -146,7 +146,7 @@ In the IOBOX project, several sensors were integrated to enable environmental an
 
 \subsubsection{ENS210 Sensor}
 
-The ENS210 is a digital sensor from ScioSense that integrates both temperature and humidity measurement in a compact package. It communicates via an I\textsuperscript{2}C interface, making it easy to integrate with microcontrollers such as the STM32G474. Its high accuracy and low power consumption make it suitable for environmental monitoring in embedded systems.
+The ENS210 is a digital temperature and humidity sensor from ScioSense that combines both sensing functions within a single chip. The sensor is connected using the I2C bus protocol, facilitating integration into microcontrollers like the STM32G474. The device's high precision and low power dissipation characteristics make it ideal for embedded applications requiring environmental sensing.
 
 \begin{table}[H]
     \centering
@@ -186,10 +186,8 @@ The ENS210 is a digital sensor from ScioSense that integrates both temperature a
 
 \subsubsection{OPT3001DNPR Sensor}
 
-The OPT3001DNPR is a digital ambient light sensor from Texas Instruments. It is designed to measure the intensity of visible light and provide results in lux units, making it ideal for applications such as automatic brightness control, display backlight adjustment, and environmental monitoring. The sensor communicates via the I\textsuperscript{2}C protocol and features built‑in calibration and linear response across a wide dynamic range.
-
-In the IO‑Box project, the OPT3001DNPR was integrated to provide accurate light measurements. Work was carried out on its internal registers to configure measurement modes, thresholds, and calibration routines, ensuring reliable data acquisition for real‑time applications.
-
+The OPT3001DNPR is a digital ambient light sensor developed by Texas Instruments. As its name suggests, the sensor measures visible-light intensity outputted in lux units. This component is suitable for use in automatic brightness control and dimming, display backlighting management, and other similar applications requiring accurate light-level sensing. Communication with the host processor occurs over the I\textsuperscript{2}C bus.
+During the development of the current project, integration with the OPT3001DNPR has been performed to acquire ambient light-level measurements. Configuration of measurement modes, threshold detection parameters, and calibration procedures were conducted based on the content of internal registers.
 \begin{table}[H]
     \centering
     \caption{Key Characteristics of OPT3001DNPR Sensor}
@@ -324,22 +322,20 @@ An example of DAC signal generation is illustrated in Figure~\ref{fig:dac_wavefo
 
 \subsection{Analog to Digital Converter (ADC)}
 
-The Analog‑to‑Digital Converter (ADC) is a fundamental peripheral in embedded systems, responsible for transforming continuous analog signals into discrete digital values that can be processed by the microcontroller. This conversion is essential for applications where physical phenomena such as temperature, pressure, or current must be measured and interpreted by digital logic.
-
-In the IOBox project, ADCs are employed to acquire signals from sensors and external modules, enabling precise monitoring and control. The STM32G474 microcontroller integrates multiple high‑resolution ADC channels, allowing simultaneous sampling of different inputs. This capability is particularly important in industrial contexts where multiple signals must be captured in real time.
-
-The operation of an ADC follows a well‑defined process. The analog input is sampled at regular intervals determined by the sampling frequency. Each sample is then quantized into a digital value according to the converter’s resolution (e.g., 12‑bit or 16‑bit). The resulting digital word represents the amplitude of the analog signal at that instant. The accuracy of this conversion depends on factors such as resolution, sampling rate, and reference voltage stability.
-
-Key characteristics of ADCs include:
+Analog-to-Digital Converters (ADCs) represent one of the key peripherals in embedded systems, which convert analog continuous-time signals into discrete digital equivalents for further processing by the microcontroller. Such conversions are critical for sensing and analyzing physical phenomena such as temperature, pressure, and current.
+In the IOBox project, ADCs serve for acquisition of sensor readings and data from additional modules connected to the system. The STM32G474 MCU features several ADC channels, providing simultaneous sampling of various inputs. This feature proves useful when handling multiple simultaneous signals typical of industrial use cases.
+ADC operation involves a sequence of steps performed for each conversion cycle. Firstly, the analog signal is sampled periodically based on the sampling frequency. Next, each sample point is converted to a corresponding digital representation using the ADC resolution (e.g., 12-bit and 16-bit). Thus obtained digital word corresponds to the amplitude of the input analog signal at that moment in time. The overall conversion accuracy largely depends on parameters such as resolution, sampling frequency, and stability of the reference voltage.
+Key properties of ADCs include:
 \begin{itemize}
-    \item \textbf{Resolution}: Defines the number of discrete levels available.
-    \item \textbf{Sampling Rate}: Determines how frequently the analog signal is measured, affecting the fidelity of dynamic signals.
-    \item \textbf{Reference Voltage}: Sets the maximum measurable input range, ensuring proper scaling of the digital output.
-    \item \textbf{Input Channels}: Multiple channels allow acquisition from several sensors simultaneously.
-    \item \textbf{Conversion Modes}: Support for single, continuous, and DMA‑driven conversions, enabling flexible integration into firmware.
+    \item \textbf{Resolution}:  defined by the amount of discrete levels supported. 
+    \item \textbf{Sampling rate}: Specifies how often the analog value will be sampled, thus impacting the accuracy of dynamic signals. 
+    \item \textbf{Reference voltage}: determines the maximum value of the input signal to be measured, providing appropriate scaling of the output result.
+    \item \textbf{Input channels}:Multiple input channels can measure several inputs from various sensors in parallel.
+    \item \textbf{Conversion modes}:Several conversion modes include single-shot, continuous, and DMA-based conversions, allowing exible embedding in the firmware.
 \end{itemize}
 
-Within the IO‑Box, ADCs are used to capture sensor data such as voltage levels, current measurements, or other analog signals. These values are then processed by the firmware to generate meaningful information, trigger control actions, or communicate results to external supervisory systems.
+ADCs in the IO-Box collect raw analog data like voltage, current, or any other physical quantity sensed by the attached sensors.
+The collected data is processed in the firmware layer to extract valuable information, take certain actions based on this data, or send it further for analysis by supervisory systems.
 
 \begin{figure}[H]
     \centering
@@ -350,25 +346,27 @@ Within the IO‑Box, ADCs are used to capture sensor data such as voltage levels
 
 \subsection{Timers}
 
-Timers are fundamental peripherals in the STM32G474 microcontroller, designed to provide accurate time base generation, event counting, and signal measurement. They operate by incrementing or decrementing a counter register according to a clock source, and can trigger actions when predefined values are reached.
+The timer peripheral module in the STM32G474 microcontroller is an essential component for precise time base generation, counting events, and measuring signals. It works by incrementing/decrementing a counter register based on a clock input. Actions can be initiated whenever certain thresholds are met in the counter value.
 
-Key functionalities of timers include:
+Key features of timers include:
 \begin{itemize}
-    \item \textbf{Time Base Generation}: Creating precise delays or periodic events.
-    \item \textbf{Input Capture}: Measuring external signal characteristics such as frequency or pulse width.
-    \item \textbf{Output Compare}: Generating events when the counter matches a reference value.
-    \item \textbf{Synchronization}: Coordinating multiple timers for complex control tasks.
-    \item \textbf{Advanced Features}: Dead‑time insertion, break inputs, and complementary outputs for safe power electronics control.
+    \item \textbf{Timer Functions:}: Time Base Generation refers to generating accurate delays or repetitive events.
+    \item \textbf{Input Capture }: Involves measuring properties of external signals, including their frequencies or pulse widths.
+    \item \textbf{Output Compare}: consists of triggering events based on matching values of the counter register with reference values.
+    \item \textbf{Synchronization}: includes synchronizing several timer modules to achieve more complicated control applications.
+
 \end{itemize}
 
-Timers are essential for scheduling tasks, measuring sensor signals, and driving peripherals that require precise timing.
+Timers are fundamental components in many applications involving scheduling
+of operations, processing sensor measurements, and controlling peripherals requiring
+accurate timing.
 
 
 \subsection{Pulse Width Modulation (PWM)}
 
-Pulse Width Modulation (PWM) is a technique used to encode analog information into a digital waveform by varying the duty cycle of a periodic signal. In embedded systems, PWM is widely used for motor control, LED dimming, and power regulation.
+Pulse Width Modulation (PWM) refers to a method for representing analog values as digital signals based on the variation in the duty cycle within a periodic wave signal. In embedded systems applications, PWM plays an essential role in controlling DC motors, LED brightness adjustment, and power conversion.
 
-PWM signals in the STM32G474 are generated using timers. The timer counts up to a predefined value stored in the auto‑reload register (ARR), while the compare register (CCR) defines the switching point of the output. The ratio between the high time and the total period represents the duty cycle. By adjusting ARR and CCR, both frequency and duty cycle can be controlled with high precision.
+On the STM32G474 platform, PWM generation occurs via the timer peripheral modules. A timer counter increases its value until reaching the limit value set in the auto-reload register (ARR). The compare register (CCR) sets the switchpoint of the PWM output signal. The relationship between the pulse duration and the complete period determines the duty cycle percentage. Through ARR and CCR register manipulation, precise frequency and duty cycle control become possible.
 
 Key characteristics of PWM include:
 \begin{itemize}
@@ -419,9 +417,8 @@ The Serial Peripheral Interface (SPI) is a synchronous serial communication prot
 
 In the IOBOX project, SPI is employed to ensure reliable and efficient communication with external modules that require fast data transfer. Its simplicity and speed make it suitable for real‑time applications, particularly when multiple peripherals must be interfaced with the STM32 microcontroller.
 
-SPI communication is based on a clock signal generated by the master device. Each bit of data is shifted out on the MOSI line while simultaneously another bit is shifted in on the MISO line. This process is synchronized by the clock (SCLK), ensuring deterministic timing. The communication sequence typically follows these steps: the master activates the Chip Select (CS) line of the desired slave, provides the clock signal, transmits data bit‑by‑bit on MOSI while receiving data on MISO, samples the data according to the configured mode, and finally deactivates the CS line to end the session. This mechanism allows full‑duplex communication, meaning data can be transmitted and received simultaneously.
-
-SPI supports four modes of operation (Mode 0 to Mode 3), determined by the configuration of clock polarity (CPOL) and clock phase (CPHA). This flexibility ensures compatibility with a wide range of peripheral devices. Key characteristics of SPI include its high speed (operating at several MHz), simple wiring with four main signals (MOSI, MISO, SCLK, CS), and scalability through multiple slave connections.
+SPI communication is based on a clock signal generated by the master device. Each bit of data is shifted out on the MOSI line while simultaneously another bit is shifted in on the MISO line. The SPI protocol employs synchronous communication controlled by the clock signal (SCLK) to guarantee predictable timing performance. A basic transaction involving SPI communication involves the activation of the chip select (CS) line corresponding to a specific slave device, followed by the generation of the clock signal, transferring bits sequentially using MOSI and reading bits via MISO, sampling the data based on the mode selected, and terminating the connection by deactivating the CS line. As a result, bidirectional simultaneous data transfer is made possible.
+Four different operational modes are available with SPI communication, designated as Modes 0 to 3, based on the values of the CPOL and CPHA parameters. Such flexibility makes the protocol compatible with various types of peripherals. Main features of SPI communication include high-speed data transfer (several MHz), straightforward cabling (four wires: MOSI, MISO, SCLK, CS), and scalable implementation using several slaves.
 
 \begin{figure}[H]
     \centering
@@ -524,16 +521,27 @@ This classification enables structured interaction with the IOBOX memory map, se
 
 \subsection{Controller Area Network (CAN)}
 
-The Controller Area Network (CAN) is a robust serial communication protocol originally developed for automotive applications, but now widely used in industrial and embedded systems. It enables reliable data exchange between multiple devices without requiring a central host, making it ideal for distributed control systems.
-
-In the IOBOX project, CAN is employed to ensure communication with industrial equipment and sensors that demand high reliability and fault tolerance. Its ability to handle multiple nodes on a single bus makes it particularly suitable for environments where numerous devices must share information in real time.
-
-CAN communication is based on a message‑oriented protocol. Instead of addressing specific devices directly, each message carries an identifier that defines its priority and content. This allows multiple nodes to listen simultaneously and decide whether to act on the received data. The arbitration mechanism ensures that when two nodes attempt to transmit at the same time, the message with the highest priority (lowest identifier value) wins, while the other node waits until the bus is free. This guarantees deterministic communication without collisions.
-
-Key characteristics of CAN include:
+The Controller Area Network (CAN) is a dependable serial communication
+protocol primarily designed for automotive applications, but today extensively utilized
+in industry and embedded computing systems. Unlike traditional network protocols,
+it does not require a host node since CAN facilitates data communication among
+various devices connected to the same network. 
+For the IOBOX project, CAN communication technology has been selected because of
+its high reliability and fault tolerance properties, essential for communication with
+industrial equipment and sensors. The capability to incorporate many nodes into the
+same CAN bus network makes it appropriate for applications involving multiple
+devices transmitting information simultaneously.
+Communication in CAN occurs according to a messaging protocol. Rather than
+addressing particular nodes, every transmitted message contains an identifier field
+specifying its priority and type of content. As a result, all nodes receive a message
+and determine if the incoming information needs further processing. Arbitration
+allows two nodes communicating simultaneously to resolve any potential conflicts:
+the node transmitting a message with a higher priority (a lower identifier number)
+wins, and another node retries sending a message later after the bus becomes free.
+Key features of the CAN protocol:
 \begin{itemize}
-    \item \textbf{Multi‑master capability}: Any node can initiate communication when the bus is idle.
-    \item \textbf{Error detection and handling}: Built‑in mechanisms such as CRC checks, acknowledgment bits, and error frames ensure data integrity.
+    \item \textbf{Multi-master support}: Communication can be initiated by any node whenever the bus becomes available.
+    \item \textbf{Error detection and correction}: Various methods, including CRC, acknowledgment bits, and error frames, guarantee data reliability.
     \item \textbf{Priority‑based arbitration}: Messages are prioritized by identifiers, ensuring that critical data is transmitted first.
     \item \textbf{Scalability}: Supports up to 112 nodes on a single bus, making it suitable for complex systems.
     \item \textbf{Speed}: Operates up to 1 Mbps in classical CAN, and higher in CAN FD (Flexible Data‑Rate), which extends payload size and transmission speed.
