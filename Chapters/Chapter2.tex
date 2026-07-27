@@ -38,7 +38,7 @@ Figure~\ref{fig:synoptic_architecture} shows the overall architecture of the IOB
 \section{Hardware components}
 
 \subsection{STM32G4 Microcontroller}
-At the heart of the IOBOX lies the STM32G474MBTx microcontroller from STMicroelectronics based on the high‑performance ARM Cortex‑M4 core with making it particularly well‑suited for real‑time signal processing and control applications.   
+At the heart of the IOBOX lies the STM32G474MBTx microcontroller from STMicroelectronics, based on the high‑performance ARM Cortex‑M4 core, making it particularly well‑suited for fast signal processing and control applications, as illustrated in Figure~\ref{fig:stm32_chip}.   
 
 \begin{figure}[H]
     \centering
@@ -47,7 +47,7 @@ At the heart of the IOBOX lies the STM32G474MBTx microcontroller from STMicroele
     \label{fig:stm32_chip}
 \end{figure}
 
-The STM32G474 was selected because it provides all the necessary communication protocol interfaces and peripherals that we needed in this project, like the high ADC channel count (five independent ADC units versus two on the F4), its native FDCAN peripheral and its modern HAL ecosystem. Compared to the STM32L4 series, the STM32G474 offers higher clock speed (170 MHz versus 80 MHz) which is necessary for real-time signal processing.
+The STM32G474 was selected because it provides all the necessary communication protocol interfaces and peripherals that we needed in this project, like the high ADC channel count (five independent ADC units versus two on the F4), its native FDCAN peripheral and its modern HAL ecosystem. Compared to the STM32L4 series, the STM32G474 offers higher clock speed (170 MHz versus 80 MHz) which is necessary for fast signal processing, as summarized in Table~\ref{tab:stm32g474_attributes}.
 \begin{table}[H]
     \centering
     \caption{Product Attributes — STM32G474 Microcontroller}
@@ -97,7 +97,7 @@ communication with external systems via various industrial protocols.
  
 The IOBOX is equipped with an external EEPROM memory (M95M01-RDW6TP) that comes from STMicroelectronics . This device allows storing the necessary parameters, as well as calibration and logging data for system operation without losing data during power cycling operations.
 
-The M95M01-RDW6TP EEPROM is a 1 Mbit device that operates on the principle of 131,072 × 8 bits . With a speed of 25 ns, and the communication interface is the SPI bus. It makes an easy integration with STM32G474 .  Packaged in an 8 pin SOIC . it provides one milion write cycles , and a period of 40 years of data retention .
+The M95M01-RDW6TP EEPROM is a 1 Mbit device that operates on the principle of 131,072 × 8 bits. With a speed of 25 ns, and the communication interface is the SPI bus. It makes an easy integration with STM32G474. Packaged in an 8-pin SOIC, it provides one million write cycles and a period of 40 years of data retention. Its main characteristics are summarized in Table~\ref{tab:eeprom}, and a view of the physical component is shown in Figure~\ref{fig:eeprom}.
 
 \begin{table}[H]
     \centering
@@ -135,168 +135,6 @@ The M95M01-RDW6TP EEPROM is a 1 Mbit device that operates on the principle of 13
     \label{fig:eeprom}
 \end{figure}
 
-\subsection{Sensors}
-
-In this project, we integrated various sensors used for environmental and physical measurements in which our work focused not only on interfacing these sensors with the STM32G474 microcontroller but also on configuring their registers, managing communication protocols and calibrating each one for accurate data acquisition.
-
-\subsubsection{ENS210 Sensor}
-
-The ENS210 is a digital temperature and humidity sensor from ScioSense that combines both sensing functions within a single chip. The sensor is connected using the I2C bus protocol, facilitating integration into microcontrollers like the STM32G474. The device's high precision and low power dissipation characteristics make it ideal for embedded applications requiring environmental sensing.
-
-\begin{table}[H]
-    \centering
-    \caption{Key Characteristics of ENS210 Sensor}
-    \label{tab:ens210}
-    \begin{tabular}{|l|l|}
-        \hline
-        \textbf{Feature} & \textbf{Specification} \\
-        \hline
-        Manufacturer & ScioSense \\
-        \hline
-        Type & Temperature + Humidity Sensor \\
-        \hline
-        Interface & I\textsuperscript{2}C (16‑bit output registers) \\
-        \hline
-        Supply Voltage & 1.71 V – 3.6 V \\
-        \hline
-        Temperature Range & –40 °C to +100 °C \\
-        \hline
-        Temperature Accuracy & ±0.15 °C \\
-        \hline
-        Humidity Range & 0 – 100 \% RH \\
-        \hline
-       Humidity Accuracy & $\pm$2 \% RH \\
-        \hline
-        Package & 4‑QFN (2 × 2 mm) \\
-        \hline
-    \end{tabular}
-\end{table}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.3\textwidth]{Figures/ens210.jpg}
-    \caption{ENS210 digital temperature and humidity sensor}
-    \label{fig:ens210}
-\end{figure}
-
-\subsubsection{OPT3001DNPR Sensor}
-
-The OPT3001DNPR is a digital ambient light sensor developed by Texas Instruments. As its name suggests, the sensor measures visible-light intensity outputted in lux units. This component is suitable for use in automatic brightness control and dimming, display backlighting management, and other similar applications requiring accurate light-level sensing. Communication with the host processor occurs over the I\textsuperscript{2}C bus.
-During the development of the current project, integration with the OPT3001DNPR has been performed to acquire ambient light-level measurements. Configuration of measurement modes, threshold detection parameters, and calibration procedures were conducted based on the content of internal registers.
-\begin{table}[H]
-    \centering
-    \caption{Key Characteristics of OPT3001DNPR Sensor}
-    \label{tab:opt3001}
-    \begin{tabular}{|l|l|}
-        \hline
-        \textbf{Feature} & \textbf{Specification} \\
-        \hline
-        Manufacturer & Texas Instruments \\
-        \hline
-        Type & Ambient Light Sensor \\
-        \hline
-        Interface & I\textsuperscript{2}C \\
-        \hline
-        Supply Voltage & 1.6 V – 3.6 V \\
-        \hline
-        Measurement Range & 0.01 lux – 83,000 lux \\
-        \hline
-        Output Format & 16‑bit digital result in lux \\
-        \hline
-        Accuracy & ±10\% typical \\
-        \hline
-        Operating Temperature & –40 °C to +85 °C \\
-        \hline
-        Package & 6‑Pin WSON (2 × 2 mm) \\
-        \hline
-    \end{tabular}
-\end{table}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.3\textwidth]{Figures/opt3001.jpg}
-    \caption{OPT3001DNPR ambient light sensor}
-    \label{fig:opt3001}
-\end{figure}
-
-\subsubsection{HTS221TR Sensor}
-
-The HTS221TR is a capacitive digital sensor for relative humidity and temperature made by STMicroelectronics, that integrates sensing elements and circuitry for signal conditioning within its small package and gives calibrated measurement output values using the standard I2C interface. This sensor was designed for low-power applications while maintaining accurate measurement making it the best choice for environmental data monitoring.
-
-In this project, the HTS221TR is used to acquire ambient temperature and relative humidity data using its factory-calibrated coefficients to improve measurement reliability. Communication with the STM32G474 microcontroller is achieved through the I\textsuperscript{2}C bus, and dedicated software drivers were developed to configure the device and process sensor data.
-
-\begin{table}[H]
-    \centering
-    \caption{Key Characteristics of HTS221TR Sensor}
-    \label{tab:hts221}
-    \begin{tabular}{|l|l|}
-        \hline
-        \textbf{Feature} & \textbf{Specification} \\
-        \hline
-        Manufacturer & STMicroelectronics \\
-        \hline
-        Type & Temperature + Humidity Sensor \\
-        \hline
-        Interface & I\textsuperscript{2}C (SPI mode not used in this project) \\
-        \hline
-        Supply Voltage & 1.7 V -- 3.6 V \\
-        \hline
-        Temperature Range & -40 °C to +120 °C \\
-        \hline
-        Temperature Accuracy & $\pm$0.5 °C (typ.) \\
-        \hline
-        Humidity Range & 0 -- 100 \% RH \\
-        \hline
-        Humidity Accuracy & $\pm$3.5 \% RH (typ.) \\
-        \hline
-        Output Resolution & 16-bit \\
-        \hline
-        Package & HLGA-6 (2 × 2 mm) \\
-        \hline
-    \end{tabular}
-\end{table}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.3\textwidth]{Figures/hts221.jpg}
-    \caption{HTS221TR temperature and humidity sensor}
-    \label{fig:hts221}
-\end{figure}
-
-\subsubsection{RS485-to-USB Converter}
-The RS485-to-USB converter is a compact interface device that bridges the 
-RS485 serial communication standard and the Universal Serial Bus (USB) .
-Within the IOBOX project, the RS485-to-USB converter played a central role 
-during the development and validation phases. It served as the physical link 
-between the STM32G474MBTx target board and the host computer, enabling the 
-monitoring, testing, and debugging of the Modbus RTU communication layer 
-implemented over the RS485 interface.
-\begin{table}[H]
-\centering
-\caption{Key Characteristics of the RS485-to-USB Converter}
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Parameter}                & \textbf{Value}                        \\ \hline
-Type                              & RS485-to-USB Serial Adapter           \\ \hline
-Communication Standards           & USB 2.0, EIA/TIA-485 (RS485)          \\ \hline
-USB Interface                     & USB Type-A / Type-B (Full Speed)      \\ \hline
-RS485 Interface                   & Half-duplex, 2-wire differential      \\ \hline
-Operating Voltage                 & Bus-powered via USB (5\,V)            \\ \hline
-Maximum Data Rate                 & Up to 3\,Mbps                         \\ \hline
-Isolation                         & Optional (model-dependent)            \\ \hline
-OS Compatibility                  & Windows, Linux, macOS                 \\ \hline
-\end{tabular}
-\label{tab:rs485_usb}
-\end{table}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.3\textwidth]{Figures/rs485_usb_converter.jpg}
-    \caption{RS485-to-USB converter used for communication testing}
-    \label{fig:rs485_usb}
-\end{figure}
-
-
 \section{Peripherals}
 
 \subsection{Digital-to-Analog Converter (DAC)}
@@ -332,8 +170,9 @@ Key properties of ADCs include:
 \end{itemize}
 
 ADCs in the IO-Box collect raw analog data like voltage, current, or any other physical quantity sensed by the attached sensors.
-The collected data is processed in the firmware layer to extract valuable information, take certain actions based on this data, or send it further for analysis by supervisory systems.
+The collected data is processed in the firmware layer to extract valuable information, take certain actions based on this data, or send it further for analysis by supervisory systems. 
 
+A typical conversion flow is illustrated in Figure~\ref{fig:adc}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.70\textwidth]{Figures/ADC.png}
@@ -374,11 +213,178 @@ Key characteristics of PWM include:
     \item \textbf{Applications}: Motor drivers, LED dimming, switching converters, and DAC emulation.
 \end{itemize}
 
+A representative example of PWM waveforms with different duty cycles is shown in Figure~\ref{fig:pwm}.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{Figures/Duty_Cycle_Examples.png}
     \caption{Illustration of PWM signals with different duty cycles}
     \label{fig:pwm}
+\end{figure}
+
+\subsection{Sensors}
+
+In this project, we integrated various sensors used for environmental and physical measurements in which our work focused not only on interfacing these sensors with the STM32G474 microcontroller but also on configuring their registers, managing communication protocols and calibrating each one for accurate data acquisition.
+
+\subsubsection{ENS210 Sensor}
+
+The ENS210 is a digital temperature and humidity sensor from ScioSense that combines both sensing functions within a single chip. The sensor is connected using the I2C bus protocol, facilitating integration into microcontrollers like the STM32G474. The device's high precision and low power dissipation characteristics make it ideal for embedded applications requiring environmental sensing. Its main characteristics are summarized in Table~\ref{tab:ens210}, and the sensor package is shown in Figure~\ref{fig:ens210}.
+
+\begin{table}[H]
+    \centering
+    \caption{Key Characteristics of ENS210 Sensor}
+    \label{tab:ens210}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{Specification} \\
+        \hline
+        Manufacturer & ScioSense \\
+        \hline
+        Type & Temperature + Humidity Sensor \\
+        \hline
+        Interface & I\textsuperscript{2}C (16‑bit output registers) \\
+        \hline
+        Supply Voltage & 1.71 V – 3.6 V \\
+        \hline
+        Temperature Range & –40 °C to +100 °C \\
+        \hline
+        Temperature Accuracy & ±0.15 °C \\
+        \hline
+        Humidity Range & 0 – 100 \% RH \\
+        \hline
+       Humidity Accuracy & $\pm$2 \% RH \\
+        \hline
+        Package & 4‑QFN (2 × 2 mm) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/ens210.jpg}
+    \caption{ENS210 digital temperature and humidity sensor}
+    \label{fig:ens210}
+\end{figure}
+
+\subsubsection{HTS221TR Sensor}
+
+The HTS221TR is a capacitive digital sensor for relative humidity and temperature made by STMicroelectronics, that integrates sensing elements and circuitry for signal conditioning within its small package and gives calibrated measurement output values using the standard I2C interface. This sensor was designed for low-power applications while maintaining accurate measurement making it the best choice for environmental data monitoring.
+
+In this project, the HTS221TR is used to acquire ambient temperature and relative humidity data using its factory-calibrated coefficients to improve measurement reliability. Communication with the STM32G474 microcontroller is achieved through the I\textsuperscript{2}C bus, and dedicated software drivers were developed to configure the device and process sensor data.
+
+Its main characteristics are summarized in Table~\ref{tab:hts221}, and the sensor package is shown in Figure~\ref{fig:hts221}
+\begin{table}[H]
+    \centering
+    \caption{Key Characteristics of HTS221TR Sensor}
+    \label{tab:hts221}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{Specification} \\
+        \hline
+        Manufacturer & STMicroelectronics \\
+        \hline
+        Type & Temperature + Humidity Sensor \\
+        \hline
+        Interface & I\textsuperscript{2}C (SPI mode not used in this project) \\
+        \hline
+        Supply Voltage & 1.7 V -- 3.6 V \\
+        \hline
+        Temperature Range & -40 °C to +120 °C \\
+        \hline
+        Temperature Accuracy & $\pm$0.5 °C (typ.) \\
+        \hline
+        Humidity Range & 0 -- 100 \% RH \\
+        \hline
+        Humidity Accuracy & $\pm$3.5 \% RH (typ.) \\
+        \hline
+        Output Resolution & 16-bit \\
+        \hline
+        Package & HLGA-6 (2 × 2 mm) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/hts221.jpg}
+    \caption{HTS221TR temperature and humidity sensor}
+    \label{fig:hts221}
+\end{figure}
+
+\subsubsection{OPT3001DNPR Sensor}
+
+The OPT3001DNPR is a digital ambient light sensor developed by Texas Instruments. As its name suggests, the sensor measures visible-light intensity outputted in lux units. This component is suitable for use in automatic brightness control and dimming, display backlighting management, and other similar applications requiring accurate light-level sensing. Communication with the host processor occurs over the I\textsuperscript{2}C bus. During the development of the current project, integration with the OPT3001DNPR has been performed to acquire ambient light-level measurements. Configuration of measurement modes, threshold detection parameters, and calibration procedures were conducted based on the content of internal registers.
+
+ Its main characteristics are summarized in Table~\ref{tab:opt3001}, and the physical sensor is shown in Figure~\ref{fig:opt3001}.
+\begin{table}[H]
+    \centering
+    \caption{Key Characteristics of OPT3001DNPR Sensor}
+    \label{tab:opt3001}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Feature} & \textbf{Specification} \\
+        \hline
+        Manufacturer & Texas Instruments \\
+        \hline
+        Type & Ambient Light Sensor \\
+        \hline
+        Interface & I\textsuperscript{2}C \\
+        \hline
+        Supply Voltage & 1.6 V – 3.6 V \\
+        \hline
+        Measurement Range & 0.01 lux – 83,000 lux \\
+        \hline
+        Output Format & 16‑bit digital result in lux \\
+        \hline
+        Accuracy & ±10\% typical \\
+        \hline
+        Operating Temperature & –40 °C to +85 °C \\
+        \hline
+        Package & 6‑Pin WSON (2 × 2 mm) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/opt3001.jpg}
+    \caption{OPT3001DNPR ambient light sensor}
+    \label{fig:opt3001}
+\end{figure}
+
+\subsubsection{RS485-to-USB Converter}
+The RS485-to-USB converter is a compact interface device that bridges the 
+RS485 serial communication standard and the Universal Serial Bus (USB). 
+Within the IOBOX project, the RS485-to-USB converter played a central role 
+during the development and validation phases. It served as the physical link 
+between the STM32G474MBTx target board and the host computer, enabling the 
+monitoring, testing, and debugging of the Modbus RTU communication layer 
+implemented over the RS485 interface. 
+
+Its characteristics are summarized in Table~\ref{tab:rs485_usb}, and its physical form is shown in Figure~\ref{fig:rs485_usb}.
+\begin{table}[H]
+\centering
+\caption{Key Characteristics of the RS485-to-USB Converter}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Parameter}                & \textbf{Value}                        \\ \hline
+Type                              & RS485-to-USB Serial Adapter           \\ \hline
+Communication Standards           & USB 2.0, EIA/TIA-485 (RS485)          \\ \hline
+USB Interface                     & USB Type-A / Type-B (Full Speed)      \\ \hline
+RS485 Interface                   & Half-duplex, 2-wire differential      \\ \hline
+Operating Voltage                 & Bus-powered via USB (5\,V)            \\ \hline
+Maximum Data Rate                 & Up to 3\,Mbps                         \\ \hline
+Isolation                         & Optional (model-dependent)            \\ \hline
+OS Compatibility                  & Windows, Linux, macOS                 \\ \hline
+\end{tabular}
+\label{tab:rs485_usb}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Figures/rs485_usb_converter.jpg}
+    \caption{RS485-to-USB converter used for communication testing}
+    \label{fig:rs485_usb}
 \end{figure}
 
 \section{Communication Protocols}
@@ -389,8 +395,7 @@ Inter-Integrated Circuit (I2C) is a synchronous, half-duplex serial communicatio
 Each device connected to the bus is identified by a unique address. Data is then exchanged one byte at a time, with each byte followed by an acknowledgment bit (ACK/NACK) from the receiving device. The communication is terminated by a STOP condition. I2C supports different speed modes, including Standard Mode (100 kHz), Fast Mode (400 kHz), and higher-speed variants.
 
 The I2C frame structure is illustrated in Figure~\ref{fig:i2c_frame}.
-
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{Figures/i2c_frame.png}
 \caption{I2C frame format}
@@ -400,8 +405,7 @@ The I2C frame structure is illustrated in Figure~\ref{fig:i2c_frame}.
 In this project, the I2C interface of the STM32G474MBTx is configured using the HAL library generated by STM32CubeMX. It is used to communicate with external peripherals such as sensors and low-speed devices. The implementation relies on interrupt or polling-based data transfers depending on timing constraints. Particular attention is given to bus stability, including proper pull-up resistor sizing and handling of potential communication errors such as bus busy states or missing acknowledgments.
 
 As shown in Figure~\ref{fig:i2c_bus}, the I2C bus allows multiple slave devices.
-
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{Figures/i2c_bus.png}
 \caption{I2C communication bus architecture}
@@ -414,9 +418,12 @@ The Serial Peripheral Interface (SPI) is a synchronous serial communication prot
 
 In the IOBOX project, SPI is employed to ensure reliable and efficient communication with external modules that require fast data transfer. Its simplicity and speed make it suitable for real‑time applications, particularly when multiple peripherals must be interfaced with the STM32 microcontroller.
 
-SPI communication is based on a clock signal generated by the master device. Each bit of data is shifted out on the MOSI line while simultaneously another bit is shifted in on the MISO line. The SPI protocol employs synchronous communication controlled by the clock signal (SCLK) to guarantee predictable timing performance. A basic transaction involving SPI communication involves the activation of the chip select (CS) line corresponding to a specific slave device, followed by the generation of the clock signal, transferring bits sequentially using MOSI and reading bits via MISO, sampling the data based on the mode selected, and terminating the connection by deactivating the CS line. As a result, bidirectional simultaneous data transfer is made possible.
+SPI communication is based on a clock signal generated by the master device. Each bit of data is shifted out on the MOSI line while simultaneously another bit is shifted in on the MISO line. MOSI stands for Master Out Slave In and carries data from the master to the slave, while MISO stands for Master In Slave Out and carries data from the slave back to the master. 
+
+The SPI protocol employs synchronous communication controlled by the clock signal (SCLK) to guarantee predictable timing performance. A basic transaction involving SPI communication involves the activation of the chip select (CS) line corresponding to a specific slave device, followed by the generation of the clock signal, transferring bits sequentially using MOSI and reading bits via MISO, sampling the data based on the mode selected, and terminating the connection by deactivating the CS line. As a result, bidirectional simultaneous data transfer is made possible.
 Four different operational modes are available with SPI communication, designated as Modes 0 to 3, based on the values of the CPOL and CPHA parameters. Such flexibility makes the protocol compatible with various types of peripherals. Main features of SPI communication include high-speed data transfer (several MHz), straightforward cabling (four wires: MOSI, MISO, SCLK, CS), and scalable implementation using several slaves.
 
+Figure~\ref{fig:spi} shows the basic SPI communication structure.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.65\textwidth]{Figures/spi_diagram.png}
@@ -425,7 +432,7 @@ Four different operational modes are available with SPI communication, designate
 \end{figure}
 
 \subsection{UART Protocol}
-UART is an asynchronous full-duplex serial communication protocol used to exchange data between devices without the need for a shared clock signal. Data is transmitted over two lines: Transmit (TX) and Receive (RX)  and sometimes labeled as TXD and RXD depending on the datasheet. Synchronizing between devices by configuring identical communication parameters like baud rate, number of data bits, parity bit setting and stop bit configuration.
+UART is an asynchronous full-duplex serial communication protocol used to exchange data between devices without the need for a shared clock signal. Data is transmitted over two lines: Transmit (TX) and Receive (RX) and sometimes labeled as TXD and RXD depending on the datasheet. Devices must be configured with the same baud rate, data bits, parity, and stop bit settings to ensure proper communication.
 
 Each data frame typically consists of a start bit (always low), followed by a configurable number of data bits (8 in our case), an optional parity bit for error detection and one or sometimes two stop bits.  UART has no clock line which keeps the hardware simple, but, it also means both sides have to already agree on the same baud rate beforehand, otherwise, if they drift even slightly, the bits  will get misread.
 
@@ -449,7 +456,7 @@ In this project, RS485 serves as the physical layer for Modbus RTU communication
 Before transmission, the microcontroller sets the DE pin high to enable the driver stage. After sending the data frame, the DE pin is reset to return the transceiver to reception mode. This timing control is critical to avoid bus contention. The communication is typically used for reliable data exchange in noisy environments, especially when longer cable lengths are required compared to standard UART.
 
 Figure~\ref{fig:rs485_bus} illustrates a typical RS485 bus configuration.
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.65\textwidth]{Figures/rs485_bus.png}
     \caption{RS485 differential bus with multi-node configuration}
@@ -474,6 +481,7 @@ The Modbus RTU frame consists of four main fields:
     \item \textbf{CRC Field}: Provides error detection for frame integrity.
 \end{itemize}
 
+A typical Modbus RTU frame structure is shown in Figure~\ref{fig:modbus_frame}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{Figures/modbus_rtu_frame.jpg}
@@ -481,8 +489,7 @@ The Modbus RTU frame consists of four main fields:
     \label{fig:modbus_frame}
 \end{figure}
 
-To make sure that the implementation is compatible with standard industrial devices, the implementation supports a subset of Modbus function codes, classified according to their role in data access and control:
-
+To make sure that the implementation is compatible with standard industrial devices, the implementation supports a subset of Modbus function codes, classified according to their role in data access and control. These supported codes are summarized in Table~\ref{tab:modbus_function_codes}.
 \begin{table}[H]
     \centering
     \caption{Supported Modbus Function Codes in the IOBOX Platform}
@@ -540,6 +547,7 @@ Key features of the CAN protocol:
     \item \textbf{Speed}: Operates up to 1 Mbps in classical CAN, and higher in CAN FD (Flexible Data‑Rate), which extends payload size and transmission speed.
 \end{itemize}
 
+A typical CAN frame structure is illustrated in Figure~\ref{fig:can_frame}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.70\textwidth]{Figures/trame_can.jpg}
@@ -549,6 +557,7 @@ Key features of the CAN protocol:
 
 In practice, CAN uses two differential lines, CAN\_H and CAN\_L, to transmit data. This differential signaling improves noise immunity and allows reliable communication even in electrically harsh environments. Each frame consists of fields such as the start of frame, identifier, control bits, data payload, CRC, and end of frame, ensuring structured and error‑resistant communication.
 
+A typical multi-node bus layout is shown in Figure~\ref{fig:can_bus}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.70\textwidth]{Figures/can_diagram.png}
@@ -567,7 +576,7 @@ The data response typically contains up to 8 bytes, followed by a checksum used 
 LIN communication was implemented using the UART peripheral configured in LIN mode. The hardware support simplifies break detection and synchronization field handling, reducing software complexity. The system can therefore reliably detect frame boundaries and process incoming data with minimal CPU overhead.
 
 Figure~\ref{fig:lin_frame} shows the LIN frame structure.
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth]{Figures/lin_frame.png}
 \caption{LIN frame structure}
@@ -579,7 +588,7 @@ Figure~\ref{fig:lin_frame} shows the LIN frame structure.
 \subsection{Visual Studio Code}
 Visual Studio Code (VS Code) is a free, lightweight source code editor develpoed by Microsoft, supporting multiple programming languages and providing fully customizable features such as Git integration, integrated terminal and debugging tools\cite{vscode}.
 
-In this project, VS Code was used for documentation and Git repository version control using Git Graph extension for a clear visualization of commit history, branch management, and tracking of code changes across the project's development.
+In this project, VS Code was used for documentation and Git repository version control using Git Graph extension for a clear visualization of commit history, branch management, and tracking of code changes across the project's development. The editor environment used in this work is illustrated in Figure~\ref{fig:vscode}.
 
 \begin{figure}[H]
     \centering
@@ -591,8 +600,9 @@ In this project, VS Code was used for documentation and Git repository version c
 \subsection{IAR Embedded Workbench}
 IAR Embedded Workbench (IAR EW) offers a fully integrated development environment (IDE) with highly optimized C/C++ compiler, advanced debugging capabilities, and efficient project management tools, eliminating the need for multiple third-party tools\cite{iar_ew}. 
 
-In this project, IAR EW was used for firmware development, compilation, and debugging. Its powerful optimization features contributed to generating efficient and reliable embedded code, which is critical for real-time applications and resource-constrained systems.
+In this project, IAR EW was used for firmware development, compilation, and debugging. Its powerful optimization features contributed to generating efficient and reliable embedded code, which is critical for real-time applications and resource-constrained systems. 
 
+The development interface is shown in Figure~\ref{fig:iar}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.2\textwidth]{Figures/iar_workbench.png}
@@ -603,8 +613,9 @@ In this project, IAR EW was used for firmware development, compilation, and debu
 \subsection{STM32CubeMX}
 STM32CubeMX is a graphical configuration tool developed by STMicroelectronics for STM32 microcontrollers. It allows developers to easily configure peripherals, clock settings, and pin assignments through an intuitive interface. The tool also generates initialization code based on the selected configuration, significantly reducing development time and minimizing configuration errors\cite{stm32cubemx}.
 
-In this project, STM32CubeMX was used in a limited capacity: it was invoked once at the beginning of the project to generate the initial project skeleton, configure the system clock (HSI PLL at 170 MHz), and enable the Serial Wire Debug interface. The peripheral initialization functions that CubeMX would normally generate were intentionally not used. Instead, all peripheral drivers were developed as handwritten BSP (Board Support Package) modules, which are described in detail in Chapter 3. CubeMX thus served exclusively as a project scaffolding and clock configuration tool.
+In this project, STM32CubeMX was used in a limited capacity: it was invoked once at the beginning of the project to generate the initial project skeleton, configure the system clock (HSI PLL at 170 MHz), and enable the Serial Wire Debug interface. The peripheral initialization functions that CubeMX would normally generate were intentionally not used. Instead, all peripheral drivers were developed as handwritten BSP (Board Support Package) modules, which are described in detail in Chapter 3. CubeMX thus served exclusively as a project scaffolding and clock configuration tool. 
 
+Its interface is shown in Figure~\ref{fig:cubemx}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.4\textwidth]{Figures/stm32cubemx.png}
@@ -614,8 +625,9 @@ In this project, STM32CubeMX was used in a limited capacity: it was invoked once
 
 \subsection{GitLab}
 
-GitLab was used as the version control and collaboration platform throughout the project. The repository was organized by module (BSP, Managers, Application), with branches used to isolate feature development and avoid conflicts during parallel work. Commit history served as a development log, and merge requests were used to review code before integrating changes into the main branch.
+GitLab was used as the version control and collaboration platform throughout the project. The repository was organized by module (BSP, Managers, Application), with branches used to isolate feature development and avoid conflicts during parallel work. Commit history served as a development log, and merge requests were used to review code before integrating changes into the main branch. 
 
+The platform interface is represented in Figure~\ref{fig:gitlab}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.2\textwidth]{Figures/gitlab_logo.png}
@@ -631,12 +643,12 @@ the raw communication frames.
 In the context of the IOBOX project, Modbus Poll was used as the primary 
 host-side interface for validating the Modbus RTU slave implementation 
 running on the STM32G474MBTx. Connected to the target board through the 
-RS485-to-USB converter.
+RS485-to-USB converter, it is shown in Figure~\ref{fig:modbus_poll}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.4\textwidth]{Figures/modbus_poll.jpg}
     \caption{Modbus Poll logo}
-    \label{fig:Modbus Poll}
+    \label{fig:modbus_poll}
 \end{figure}
 
 \subsection{Conclusion}
