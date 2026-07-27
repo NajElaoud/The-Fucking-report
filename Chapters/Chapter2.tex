@@ -29,7 +29,7 @@ For a more flexible communication, we added the TCA9548A I\textsuperscript{2}C m
 Figure~\ref{fig:synoptic_architecture} shows the overall architecture of the IOBOX platform that is centered on the STM32G474MBTx microcontroller.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figures/schema_synoptique.png}
+    \includegraphics[width=\textwidth,height=0.9\textheight,keepaspectratio=false]{Figures/schema_synoptique.png}
     \caption{Hardware architecture of the IOBOX platform}
     \label{fig:synoptic_architecture}
 \end{figure}
@@ -135,10 +135,10 @@ The M95M01-RDW6TP EEPROM is a 1 Mbit device that operates on the principle of 13
     \label{fig:eeprom}
 \end{figure}
 
-\section{Peripherals}
+\section{Components}
 
 \subsection{Digital-to-Analog Converter (DAC)}
-The Digital-to-Analog Converter (DAC) is one of the analog output peripherals built into the STM32G4 microcontroller. Basically it allows converting digital values stored in memory into an analog voltage. The resolution is defined by the DAC bit width which allows the generation of precise voltage references or analog waveforms.
+The Digital-to-Analog Converter (DAC) is one of the analog output components built into the STM32G4 microcontroller. Basically it allows converting digital values stored in memory into an analog voltage. The resolution is defined by the DAC bit width which allows the generation of precise voltage references or analog waveforms.
 
 The DAC can operate in three main modes: software-triggered mode, timer-triggered mode and DMA-driven mode. In timer-triggered mode, a hardware timer periodically updates the DAC output which keeps the timing consistent. And using the DMA mode reduced the MCU's need to intervene when outputting DAC values which frees it up for other tasks and significantly improving efficiency.
 
@@ -154,7 +154,7 @@ Figure~\ref{fig:dac_waveform} shows an example of DAC signal generation.
 
 \subsection{Analog to Digital Converter (ADC)}
 
-Analog-to-Digital Converters (ADCs) represent one of the key peripherals in embedded systems, which convert analog continuous-time signals into discrete digital equivalents for further processing by the microcontroller. Such conversions are critical for sensing and analyzing physical phenomena such as temperature, pressure, and current.
+Analog-to-Digital Converters (ADCs) represent one of the key components in embedded systems, which convert analog continuous-time signals into discrete digital equivalents for further processing by the microcontroller. Such conversions are critical for sensing and analyzing physical phenomena such as temperature, pressure, and current.
 
 In the IOBOX project, ADCs serve for acquisition of sensor readings and data from additional modules connected to the system. The STM32G474 MCU features several ADC channels, providing simultaneous sampling of various inputs. This feature proves useful when handling multiple simultaneous signals typical of industrial use cases.
 
@@ -182,7 +182,7 @@ A typical conversion flow is illustrated in Figure~\ref{fig:adc}.
 
 \subsection{Timers}
 
-The timer peripheral module in the STM32G474 microcontroller is an essential component for precise time base generation, counting events, and measuring signals. It works by incrementing/decrementing a counter register based on a clock input. Actions can be initiated whenever certain thresholds are met in the counter value.
+The timer module in the STM32G474 microcontroller is an essential component for precise time base generation, counting events, and measuring signals. It works by incrementing/decrementing a counter register based on a clock input. Actions can be initiated whenever certain thresholds are met in the counter value.
 
 Key features of timers include:
 \begin{itemize}
