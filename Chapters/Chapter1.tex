@@ -12,12 +12,6 @@
 
 \section{Introduction}
 This chapter gives an overview of the professional and academic context of our graduation project. First, it starts by introducing the host company, Be Wireless Solutions (BWS), covering its structure, its line of work, and the main IoT solutions it offers. Then we'll outline the project's requirements, starting with explaining the problem that was identified, then explaining how the IOBOX platform came out of it, the development method used, and the project's goals and the effects of the project.
-
-\section{Academic Institution}
-The Higher Institute of Computer Science and Mathematics of the University of Monastir (ISIMM) was created by decree number 1623 on July 9, 2002. It is a public scientific establishment of higher education under the authority of the Ministry of Higher Education and Scientific Research \cite{isimm}.     
-
-ISIMM offers engineering courses in Computer Science, Mathematics and Electronics. This graduation project was developed within the Electronics department, specialized in Microelectronics, following the requirements for the National Diploma in Engineering in Applied Sciences and Technology.
-
 %__ Hosting company presentation 
 \section{Host Company Presentation}
 
@@ -98,13 +92,26 @@ BWS also offers cold-chain monitoring systems intended for warehouses, refrigera
 \section{Project Specification}
 
 \subsection{Problem Statement}
-Industrial IoT systems are usually composed of a multitude of sensors, actuators, and communication interfaces. For each client project BWS developed dedicated firmware for each new setup; every time there was a new set of peripherals, they would need to be reconfigured and the drivers rebuilt. This approach resulted in slower development, limited reuse of code between projects, and made system maintenance harder when hardware changed. 
+Industrial IoT systems are made up of many sensors, actuators, and communication tools that must work well together in real time.In reality, these parts usually don't share the same standards.Each sensor might use a different type of connection, each actuator might expect a different control signal, and each system might use a different way to send information.Putting all these parts together into one working system is a big challenge, and it becomes harder as more devices are added.
 
-To address these issues, BWS initiated the IOBOX project. The aim was to develop a flexible, hardware-independent platform that can support different setups on one common firmware base. In industrial environments there are often different communication protocols and interface standards. Handling these through custom solutions adds complexity and makes it harder to scale the system. 
+In this situation, BWS faced a common problem.
+For every project, the company created custom software that was suited only to that specific setup.Every time new parts were added, the system had to be reconfigured and the software had to be rebuilt almost from scratch.Because this software was tightly connected to the hardware of each project, very little of it could be reused for the next one.As a result, engineers had to redo similar tasks again and again, adapting them to small changes in the hardware.
 
-The goal is to provide a customizable and reusable system for industrial data collection and control. This system aims to make the addition of peripherals easier while keeping the system flexible, easy to relocate between setups, and easier to maintain.
+This way of working was costly and time-consuming.
+Each new project started from scratch instead of building on previous work, which slowed down development.There was no reuse of work between projects, so engineers kept doing the same tasks over and over, and the knowledge from one project didn't help with the next.Keeping things running was also hard because even a small change in the hardware required updating, testing, and rechecking the software, which increased the chance of mistakes and the time needed to keep the system working.This was made even worse by the wide variety of communication standards used in industrial settings, such as RS485 with Modbus, CAN, LIN, and I2C or SPI buses.Solving each problem with a unique, custom solution made development harder and the systems more complex to extend and scale.
 
-\subsection{Presentation of the IOBOX Platform}
+To fix these issues, BWS started the IOBOX project.
+The goal was to create a flexible, hardware-independent platform that could support many different setups using a single, shared software base.Instead of rebuilding the system for each project, the idea was to build an architecture where parts that depend on specific hardware are separated from the core functionality.This way, changing to new hardware only requires minor adjustments instead of a complete rewrite.The IOBOX aims to make adding a new device into the system a simple configuration task instead of a full rebuild.
+
+This change has a big effect beyond just fixing a technical problem.
+It changes how the company uses and keeps its engineering effort.In the old way, each project used resources that only worked for that project, and this effort was lost once the work was done.A common platform, however, adds value over time—every improvement or new part added to the IOBOX helps not just the current project but all future projects.This turns repeated, short-term effort into a lasting, growing asset.
+
+This has a direct effect on how development costs and time work.
+Because each new deployment is mainly about setting things up, the time it takes to turn a client request into a working system is greatly reduced.This helps the company be faster in delivering solutions, which is important in this field.Also, writing less hardware-specific code reduces development costs and lets skilled engineers focus on more important tasks instead of re-doing basic functions.The platform also has a strong impact on quality because the same, improving software is used in many projects, making its key parts more tested and reliable over time.This makes it easier to maintain the system because hardware-related code is separated into clear sections, so any changes or problems only affect a limited part of the system.
+
+On a bigger level, the IOBOX helps the company grow and serve more different uses with the same core technology.
+It supports many types of sensors, actuators, and industrial communication standards, so different applications like environmental monitoring, energy tracking, process control, and equipment management can all use one platform instead of many separate solutions.The most important effect of this project is structural—it replaces a way of working that is split into individual projects with a single, reusable engineering base.This makes it faster and more efficient to build better industrial IoT solutions that are more reliable and cheaper to develop.
+\section{Presentation of the IOBOX Platform}
 
 The IOBOX is an industrial flexible system that helps to interconnect sensors, actuators and communication tools in industrial environments.
 
@@ -170,14 +177,177 @@ The use of the V-Model helps improve the quality of the software, lowers the ris
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{Figures/v-model.png}
+    \includegraphics[width=0.9\textwidth]{Figures/v-model.jpg}
     \caption{V-Model development lifecycle}
     \label{fig:vmodel}
 \end{figure}
 
+
+\section{State of the Art}
+ 
+The acquisition, processing, and control of data in industrial environments is a
+well-established field, and several categories of solutions already address parts
+of this problem. Reviewing them helps to situate the IOBOX platform and to clarify
+the specific need it is intended to fulfil.
+ 
+% -------------------------------------------------------------------------
+\subsection{Commercial Industrial I/O Modules and PLCs}
+% -------------------------------------------------------------------------
+ 
+The first category consists of commercial industrial input/output modules and
+programmable logic controllers (PLCs), such as those offered by manufacturers like
+Siemens, Schneider Electric, WAGO, and Beckhoff. A representative example is the
+\textbf{Advantech ADAM-6017} \cite{advantech_adam}, a widely used Ethernet-based
+analog input module that provides multiple analog channels and digital I/O with
+support for standard industrial protocols. These devices are mature, robust, and
+often certified for demanding industrial conditions, and they support a range of
+standard protocols. However, they are typically proprietary and closed systems:
+their firmware cannot be freely modified or extended, they involve significant unit
+and licensing costs, and they cannot be deeply integrated into a company's own
+software ecosystem. For an organization that needs to tailor and extend the
+platform to its own evolving solutions, this lack of openness is a considerable
+limitation.
+ 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.45\textwidth]{figures/adam6017.jpeg}
+    \caption{Advantech ADAM-6017 industrial I/O module}
+    \label{fig:adam6017}
+\end{figure}
+ 
+\begin{table}[h]
+\centering
+\caption{Key characteristics of the Advantech ADAM-6017 \cite{advantech_adam}}
+\label{tab:adam6017}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{4.5cm}|p{7.5cm}|}
+\hline
+\textbf{Characteristic} & \textbf{Value~[VERIFY]} \\
+\hline
+Type & Ethernet-based remote I/O module \\
+\hline
+Analog inputs & 8 channels, 16-bit \\
+\hline
+Digital I/O & 2 digital inputs, 2 digital outputs \\
+\hline
+Communication & Ethernet (Modbus TCP) \\
+\hline
+Supply voltage & 10--30 V DC \\
+\hline
+Operating temperature & $-10$ to $+70~^{\circ}$C \\
+\hline
+Openness & Closed / proprietary firmware \\
+\hline
+\end{tabular}
+\end{table}
+ 
+% -------------------------------------------------------------------------
+\subsection{Generic Embedded Development Platforms}
+% -------------------------------------------------------------------------
+ 
+The second category comprises generic embedded development platforms, ranging from
+Arduino-based boards and single-board computers such as the Raspberry Pi to
+microcontroller platforms based on the ESP32. A notable industrial-oriented example
+is the \textbf{Arduino Opta} \cite{arduino_opta}, a micro-PLC that brings the open
+Arduino ecosystem into an industrial form factor with relays and analog inputs.
+These solutions are flexible, low-cost, and open, which makes them attractive for
+prototyping. Nevertheless, they are generally not designed for full industrial
+robustness, and they often lack the analog precision and the native fieldbus
+support, such as CAN~FD or hardware-assisted RS485 and Modbus, required in
+industrial settings. More importantly, they provide no ready-made, reusable
+software architecture: the entire firmware structure still has to be developed for
+each application, which reproduces the very problem this project seeks to eliminate.
+ 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.45\textwidth]{figures/arduino_opta.png}
+    \caption{Arduino Opta micro-PLC}
+    \label{fig:opta}
+\end{figure}
+ 
+\begin{table}[h]
+\centering
+\caption{Key characteristics of the Arduino Opta \cite{arduino_opta}}
+\label{tab:opta}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{4.5cm}|p{7.5cm}|}
+\hline
+\textbf{Characteristic} & \textbf{Value~[VERIFY]} \\
+\hline
+Type & Open-source micro-PLC \\
+\hline
+Microcontroller & STM32H747 (dual-core) \\
+\hline
+Analog inputs & Up to 8 (0--10 V) \\
+\hline
+Outputs & 4 relay outputs \\
+\hline
+Communication & Ethernet, RS485 (model-dependent), USB \\
+\hline
+Programming & Arduino IDE / IEC~61131-3 \\
+\hline
+Openness & Open ecosystem, but no reusable multi-protocol firmware base \\
+\hline
+\end{tabular}
+\end{table}
+ 
+% -------------------------------------------------------------------------
+\subsection{In-House Custom Firmware}
+% -------------------------------------------------------------------------
+ 
+The third category is the custom, in-house firmware approach previously adopted by
+BWS, in which dedicated software was developed for each individual deployment. While
+this approach offers full control and a close fit to each project, it is inherently
+non-reusable, as discussed in the problem statement, and leads to duplicated effort,
+slower development, and difficult maintenance.
+ 
+% -------------------------------------------------------------------------
+\subsection{Positioning of the IOBOX}
+% -------------------------------------------------------------------------
+The IOBOX platform is positioned deliberately between these categories. It combines
+the openness, low cost, and full customizability of an embedded platform with a
+reusable, layered, and industrial-grade software architecture that the company fully
+owns and can extend. Unlike closed commercial modules, it can be freely adapted and
+integrated into BWS's own ecosystem without licensing constraints; unlike generic
+development boards, it provides genuine industrial connectivity and a structured,
+reusable firmware base; and unlike the previous in-house approach, it replaces
+per-project redevelopment with a single, configurable foundation. It is this
+combination of flexibility, industrial capability, and reusability that motivates
+the development of a dedicated platform rather than the adoption of an existing
+solution.
+ 
+Table~\ref{tab:comparison} summarizes how these approaches compare with the IOBOX
+across the criteria most relevant to BWS.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\caption{Comparison between existing solutions and the IOBOX platform}
+\label{tab:comparison}
+\begin{tabular}{|p{3.2cm}|p{2.6cm}|p{2.6cm}|p{2.6cm}|p{2.6cm}|}
+\hline
+\textbf{Criterion} & \textbf{Commercial I/O / PLC (ADAM)} & \textbf{Generic board (Opta)} & \textbf{In-house firmware} & \textbf{IOBOX (this work)} \\
+\hline
+Openness / customizability & Low (closed) & High & High & High \\
+\hline
+Industrial robustness & High & Medium & Depends & High \\
+\hline
+Multi-protocol support & Medium & Limited & Per project & High (Modbus, CAN, LIN, SPI, I2C, UART) \\
+\hline
+Reusable firmware base & No & No & No & Yes (layered) \\
+\hline
+Cost / licensing & High & Low & Internal effort & Low (owned) \\
+\hline
+Integration into BWS ecosystem & Difficult & Partial & Full but non-reusable & Full and reusable \\
+\hline
+Maturity / certification & High & Medium & Varies & Prototype \\
+\hline
+\end{tabular}
+\end{table}
+
+
 \section{Conclusion}
 
-This chapter explained the main structure of the project, starting by introducing the academic institution and the hosting company. Next, we presented the project's framework by describing the problem it aims to solve, its objectives, and the requirements that guided it's development. Finally, we outlined the methodology adopted throughout the project.
-
-The next chapter talks about the technical setup of the IOBox platform.
-It covers the physical parts of the system, the software tools used for development, the ways devices communicate with each other, and the extra parts of the system that support the main functions.
+This first chapter explained the background and basics of the project.We started by talking about the university, the Higher Institute of Computer Science and Mathematics of Monastir, and the company that hosted the project, Be Wireless Solutions, including how the company is organized and what it does in the field of industrial IoT.Then, we looked at the problem the project is trying to solve, which is the lack of a shared and reusable firmware system for BWS's industrial setups.We also compared this issue with existing solutions.Based on this, we introduced the IOBOX platform as the solution, explained the goals it needs to meet, and the requirements that shaped its creation.Lastly, we discussed the V-Model approach used to organize the work, which connects each design step with a testing phase and keeps everything traceable throughout the project.
+With this background and structure in place, the next chapter focuses on the technical setup of the IOBOX.
+It covers the hardware parts, especially the STM32G474 microcontroller, along with the sensors and other parts connected to it.It also explains the software tools used during development and the communication methods the platform uses to share data between devices.Together, these parts form the technical base for the design and implementation that will be covered in the chapters that follow.
