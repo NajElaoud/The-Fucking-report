@@ -16,7 +16,7 @@ This chapter gives an overview of the professional and academic context of our g
 \section{Host Company Presentation}
 
 \subsection{Company Overview}
-Be Wireless Solutions (BWS) is a technology group founded in 2016, specializing in the development of IoT/AI solutions to optimize the use of resources such as electricity, water, and fuel. Operating across three continents, BWS supports industrial companies, logistics and transportation companies, utilities, and local governments in their transition towards more sustainable and efficient resource management.\cite{bws}
+Be Wireless Solutions (BWS) is a technology group founded in 2016, specializing in the development of IoT/AI solutions to optimize the use of resources such as electricity, water, and fuel. Operating across three continents, BWS supports industrial companies, logistics and transportation companies, utilities, and local governments in their transition towards more sustainable and efficient resource management.\cite{bws} The company's logo is shown in Figure~\ref{fig:bws_logo} . 
 
 \begin{figure}[H]
     \centering
@@ -26,7 +26,7 @@ Be Wireless Solutions (BWS) is a technology group founded in 2016, specializing 
 \end{figure}
 
 \subsection{Organization Chart}
-BWS has different departments that work together during the whole process of creating industrial and IoT solutions. These departments are management, research and development, hardware design, embedded software development, cloud services, technical support, and business development.
+BWS has different departments that work together during the whole process of creating industrial and IoT solutions. These departments are management, research and development, hardware design, embedded software development, cloud services, technical support, and business development. The organization of these departments is illustrated in Figure~\ref{fig:organization_chart}.
 
 \begin{figure}[H]
     \centering
@@ -41,51 +41,57 @@ BWS creates many different industrial IoT solutions that help make operations mo
 
 \subsubsection{Energy Monitoring and Management}
 
-BWS provides intelligent energy monitoring systems capable of collecting, analyzing, and visualizing electricity consumption data in real time. These solutions help organizations identify energy-intensive equipment, optimize consumption, reduce operational costs, and improve environmental performance.
+BWS provides intelligent energy monitoring systems capable of collecting, analyzing, and visualizing electricity consumption data in real time. These solutions help organizations identify energy-intensive equipment, optimize consumption, reduce operational costs, and improve environmental performance. An example of such an energy monitoring solution is shown in Figure~\ref{fig:electricity}. 
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{Figures/electricity.png}
     \caption{Electricity consumption monitoring solution}
+    \label{fig:electricity}
 \end{figure}
 
 \subsubsection{Water Monitoring Solutions}
 
 The company provides smart water management solutions that allow for remote reading of meters, detecting leaks, monitoring unusual water use, and helping to use water resources more efficiently.
+An example of such a water management solution is shown in Figure~\ref{fig:water}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{Figures/water.png}
     \caption{Water consumption monitoring solution}
+    \label{fig:water}
 \end{figure}
 
 \subsubsection{Fleet and Fuel Management}
 
-BWS develops fleet management systems that provide real-time vehicle tracking, fuel consumption analysis, route optimization, and driver behavior monitoring.
+BWS develops fleet management systems that provide real-time vehicle tracking, fuel consumption analysis, route optimization, and driver behavior monitoring.An example of such Fleet and fuel management is shown in Figure~\ref{fig:waters}. 
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{Figures/fleet.png}
     \caption{Fleet and fuel management solution}
+    \label{fig:waters}
 \end{figure}
 
 \subsubsection{Remote Monitoring and Equipment Control}
 
-The company provides remote supervision solutions that allow operators to monitor industrial equipment, detect anomalies, generate alerts, and perform remote control operations through dedicated software platforms.
+The company provides remote supervision solutions that allow operators to monitor industrial equipment, detect anomalies, generate alerts, and perform remote control operations through dedicated software platforms.An example of such a remote monitoring and control solution is shown in Figure~\ref{fig:equipment}.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{Figures/equipment.png}
     \caption{Remote equipment monitoring and control}
+    \label{fig:equipment}
 \end{figure}
 
 \subsubsection{Cold Chain Monitoring}
 
-BWS also offers cold-chain monitoring systems intended for warehouses, refrigerated transportation, and pharmaceutical storage facilities. These solutions ensure compliance with temperature requirements and provide instant alerts when abnormal conditions occur.
+BWS also offers cold-chain monitoring systems intended for warehouses, refrigerated transportation, and pharmaceutical storage facilities. These solutions ensure compliance with temperature requirements and provide instant alerts when abnormal conditions occur.An example of such a cold-chain monitoring solution is shown in Figure~\ref{fig:coldchain}.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\textwidth]{Figures/coldchain.png}
     \caption{Cold-chain monitoring solution}
+    \label{fig:coldchain}
 \end{figure}
 
 %__ Project specification
@@ -146,6 +152,7 @@ The project activities were organized according to the different phases of the V
 The detailed design stage then focused on the BSP modules, communication manager and sensor drivers.
 
 After the design work was completed, the implementation phase involved coding BSP drivers, sensor management systems, communication protocols, and application-level functionalities. The project's validation included testing each BSP module individually, verifying sensor data acquisition and Modbus communication in an integrated environment, and performing complete system-wide testing to confirm that all operational requirements were met.
+The mapping between each V-Model phase and its corresponding project activity is summarized in Table~\ref{tab:vmodel_project}.
 \begin{table}[H]
     \centering
     \caption{Application of the V-Model to the Project}
@@ -174,7 +181,7 @@ After the design work was completed, the implementation phase involved coding BS
 The ascending branch focuses on checking and making sure everything works correctly through unit testing, integration testing, system testing, and final acceptance testing.
 
 The use of the V-Model helps improve the quality of the software, lowers the risks during development, and makes it easier to manage the project all through its different stages.
-
+The complete V-Model development lifecycle is illustrated in Figure~\ref{fig:vmodel}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{Figures/v-model.jpg}
@@ -197,7 +204,7 @@ the specific need it is intended to fulfil.
 The first category consists of commercial industrial input/output modules and
 programmable logic controllers (PLCs), such as those offered by manufacturers like
 Siemens, Schneider Electric, WAGO, and Beckhoff. A representative example is the
-\textbf{Advantech ADAM-6017} \cite{advantech_adam}, a widely used Ethernet-based
+\textbf{Advantech ADAM-6017} , a widely used Ethernet-based
 analog input module that provides multiple analog channels and digital I/O with
 support for standard industrial protocols. These devices are mature, robust, and
 often certified for demanding industrial conditions, and they support a range of
@@ -207,15 +214,16 @@ and licensing costs, and they cannot be deeply integrated into a company's own
 software ecosystem. For an organization that needs to tailor and extend the
 platform to its own evolving solutions, this lack of openness is a considerable
 limitation.
+The ADAM-6017 module is shown in Figure~\ref{fig:adam6017}, and its main characteristics are summarized in Table~\ref{tab:adam6017}.
  
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.45\textwidth]{figures/adam6017.jpeg}
     \caption{Advantech ADAM-6017 industrial I/O module}
     \label{fig:adam6017}
 \end{figure}
  
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Key characteristics of the Advantech ADAM-6017 \cite{advantech_adam}}
 \label{tab:adam6017}
@@ -248,7 +256,7 @@ Openness & Closed / proprietary firmware \\
 The second category comprises generic embedded development platforms, ranging from
 Arduino-based boards and single-board computers such as the Raspberry Pi to
 microcontroller platforms based on the ESP32. A notable industrial-oriented example
-is the \textbf{Arduino Opta} \cite{arduino_opta}, a micro-PLC that brings the open
+is the \textbf{Arduino Opta} , a micro-PLC that brings the open
 Arduino ecosystem into an industrial form factor with relays and analog inputs.
 These solutions are flexible, low-cost, and open, which makes them attractive for
 prototyping. Nevertheless, they are generally not designed for full industrial
@@ -257,15 +265,15 @@ support, such as CAN~FD or hardware-assisted RS485 and Modbus, required in
 industrial settings. More importantly, they provide no ready-made, reusable
 software architecture: the entire firmware structure still has to be developed for
 each application, which reproduces the very problem this project seeks to eliminate.
- 
-\begin{figure}[h]
+ The Arduino Opta is shown in Figure~\ref{fig:opta}, and its key characteristics are summarized in Table~\ref{tab:opta}.
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.45\textwidth]{figures/arduino_opta.png}
     \caption{Arduino Opta micro-PLC}
     \label{fig:opta}
 \end{figure}
  
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Key characteristics of the Arduino Opta \cite{arduino_opta}}
 \label{tab:opta}
@@ -315,7 +323,7 @@ per-project redevelopment with a single, configurable foundation. It is this
 combination of flexibility, industrial capability, and reusability that motivates
 the development of a dedicated platform rather than the adoption of an existing
 solution.
- 
+
 Table~\ref{tab:comparison} summarizes how these approaches compare with the IOBOX
 across the criteria most relevant to BWS.
 

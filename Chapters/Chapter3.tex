@@ -21,6 +21,7 @@ The firmware of the IOBOX platform follows a structured four-layer architecture.
 To ensure that only the peripherals and protocols necessary for a particular deployment are compiled into the firmware binary, all hardware features are enabled at compile time using feature-enable macros defined in the application configuration file, \texttt{feature\_config.h}. These preprocessor flags control the inclusion of each hardware feature, allowing the firmware to be tailored to specific application requirements.
 
 All application modules share a single global structure named \texttt{SystemBoard}, declared in \texttt{feature\_config.h}. Acting as a centralized data repository, it enables data exchange between modules in a blackboard-like manner, where each module updates its latest information and retrieves data produced by others. The structure consolidates real-time sensor measurements, CAN frame data, and system status information, and is accessed directly by the Manager and Application layers during each execution cycle.
+This layered organization is illustrated in Figure~\ref{fig:software_architecture}.
 % --- Figure: layered software architecture diagram ---
 \begin{figure}[H]
     \centering

@@ -20,7 +20,7 @@ The use of a modular architecture allowed the integration of different types of 
 
 %__Part 2 of Chapter 2: General concept and system components
 \section{IOBOX Hardware architecture}
-The IOBOX platform provides a set of analog, digital, and mixed-signal I/O resources. It includes four analog input channels connected to the ADC peripherals and seven digital inputs. On the output side, the device offers seven digital outputs, four PWM channels for actuator control, and DAC-based outputs capable of generating industrial 4--20~mA current signals allowing direct interaction with industrial control and monitoring systems.
+The IOBOX platform provides a set of analog, digital, and mixed-signal I/O resources. It includes four analog input channels connected to the ADC peripherals and seven digital inputs. On the output side, the device offers seven digital outputs, four PWM channels for actuator control, and DAC-based outputs capable of generating industrial signals allowing direct interaction with industrial control and monitoring systems.
 
 The IOBOX supports multiple communication interfaces also to ensure compatibility with industrial and IoT environments, including USB for data exchange, SPI for high-speed communication and I2C buses for sensor integration and peripheral expansion. Industrial connectivity is handled through the following transceivers: the TCAN330GD for CAN FD, the TJA1020 for LIN and the THVD1410 for RS485 for a robust long-distance communication and support of Modbus RTU.
 
@@ -371,7 +371,7 @@ Its characteristics are summarized in Table~\ref{tab:rs485_usb}, and its physica
 Type                              & RS485-to-USB Serial Adapter           \\ \hline
 Communication Standards           & USB 2.0, EIA/TIA-485 (RS485)          \\ \hline
 USB Interface                     & USB Type-A / Type-B (Full Speed)      \\ \hline
-RS485 Interface                   & Half-duplex, 2-wire differential      \\ \hline
+RS485 Interface                   &  2-wire differential                  \\ \hline
 Operating Voltage                 & Bus-powered via USB (5\,V)            \\ \hline
 Maximum Data Rate                 & Up to 3\,Mbps                         \\ \hline
 Isolation                         & Optional (model-dependent)            \\ \hline
